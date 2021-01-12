@@ -8,6 +8,8 @@ import { useNavigation } from '@react-navigation/native'
 import { Form } from '@unform/mobile'
 import { FormHandles } from '@unform/core'
 
+import api from '../../services/api'
+
 import Input from '../../components/Input'
 import Button from '../../components/Button'
 
@@ -53,15 +55,11 @@ const SignUp: React.FC = () => {
                 abortEarly: false
             })
 
-            // await api.post('/user', data)
+            await api.post('/users', data)
 
-            // addToast({
-            //     type: 'success',
-            //     title: 'User created!',
-            //     description: 'Please, logon to continue!'
-            // })
+            showToast('User created. Please, logon to continue!')
 
-            // history.push('/')
+            navigation.goBack()
 
         } catch (err) {
             if (err instanceof Yup.ValidationError) {
@@ -80,15 +78,14 @@ const SignUp: React.FC = () => {
                     showToast(errors.confirm_password)
                 //
                 return
+            } else {
+                console.log(err)
             }
 
-            // addToast({
-            //     type: 'error',
-            //     title: 'Sign up error',
-            //     description: 'Please, try again!'
-            // })
+            showToast('Sign up error. Please, try again!')
+
         }
-    }, [])
+    }, [navigation])
 
     return (
         <>

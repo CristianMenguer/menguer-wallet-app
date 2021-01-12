@@ -6,16 +6,22 @@ import { NavigationContainer } from '@react-navigation/native'
 
 import Routes from './routes'
 
+import AppProvider from './hooks/index'
+
 const App: React.FC = () => {
     return (
         <NavigationContainer>
             <StatusBar barStyle='dark-content' backgroundColor='#F5F5F5' />
-            <View style={{
-                flex: 1,
-                backgroundColor: '#F5F5F5'
-            }} >
-                <Routes />
-            </View>
+            <AppProvider >
+                <View style={{
+                    flex: 1,
+                    backgroundColor: '#F5F5F5'
+                }} >
+
+                    <Routes />
+
+                </View>
+            </AppProvider>
         </NavigationContainer>
     )
 }

@@ -8,6 +8,7 @@ import { FormHandles } from '@unform/core'
 import * as Yup from 'yup'
 
 import getValidationErrors from '../../utils/getValidationErros'
+import useAuth from '../../hooks/auth'
 
 import Input from '../../components/Input'
 import Button from '../../components/Button'
@@ -26,6 +27,8 @@ const SignIn: React.FC = () => {
 
     const formRef = useRef<FormHandles>(null)
     const passwordRef = useRef<TextInput>(null)
+
+    const { signIn } = useAuth()
 
     const navigation = useNavigation()
 
@@ -46,10 +49,10 @@ const SignIn: React.FC = () => {
 
             const { email, password } = data
 
-            // await signIn({
-            //     email,
-            //     password
-            // })
+            await signIn({
+                email,
+                password
+            })
 
             // history.push('/dashboard')
 
@@ -69,7 +72,7 @@ const SignIn: React.FC = () => {
             Alert.alert('Authentication error', 'Please, try again!')
 
         }
-    }, [])
+    }, [signIn])
 
     return (
         <>
