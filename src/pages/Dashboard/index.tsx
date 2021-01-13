@@ -1,16 +1,15 @@
-import React from 'react'
-import { Dimensions, Text } from 'react-native'
+import React, { useEffect } from 'react'
+import { ScrollView, Text } from 'react-native'
 import { LineChart, PieChart } from 'react-native-chart-kit'
 
-import useAuth from '../../hooks/auth'
+import { Container, Box } from './styles'
 
-import { Container } from './styles'
-
-import Button from '../../components/Button'
+import Header from '../../components/Header'
+import Company from '../../entities/Company'
+import { AddCompanyDB, LoadCompanyByCodeDB } from '../../models/Company'
+import { startDb } from '../../database'
 
 const Dashboard: React.FC = () => {
-
-    const { signOut } = useAuth()
 
     const dataLine = [
         Math.random() * 1000 - 200,
@@ -76,50 +75,127 @@ const Dashboard: React.FC = () => {
         }
     }
 
+    useEffect(() => {
+        async function test() {
+            let fromDB = await LoadCompanyByCodeDB('CSAN3')
+            console.log('\n\nbefore: ')
+            console.log(fromDB)
+            if (!fromDB || !fromDB.id_api || fromDB.id_api < 1) {
+                const company: Company = {
+                    id_api: 1,
+                    code: 'CSAN3',
+                    code_rdz: 'CSAN',
+                    economic_sector: 'PETRÓLEO, GÁS E BIOCOMBUSTÍVEIS',
+                    name: 'COSAN',
+                    segment: 'PETRÓLEO, GÁS E BIOCOMBUSTÍVEIS',
+                    subsector: 'PETRÓLEO, GÁS E BIOCOMBUSTÍVEIS',
+                    created_at: new Date(),
+                    updated_at: new Date()
+
+                }
+
+                await AddCompanyDB(company)
+
+                fromDB = await LoadCompanyByCodeDB('CSAN3')
+                console.log('\n\nafter: ')
+                console.log(fromDB)
+            }
+        }
+
+        async function test2() {
+            const db = await startDb()
+            console.log(db)
+        }
+
+        test()
+
+    }, [])
+
     return (
-        <Container >
+        <>
+            <Header />
+            <Container >
+                <Text>Total Balance: R$ 999.64</Text>
 
-            <Text>Profit/Loss by Month</Text>
-            <LineChart
-                data={{
-                    labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
-                    datasets: [
-                        {
-                            data: [
-                                ...dataLine
-                            ]
-                        }
-                    ]
-                }}
-                width={Dimensions.get("window").width} // from react-native
-                height={220}
-                yAxisLabel="€"
-                yAxisSuffix=""
-                yAxisInterval={1} // optional, defaults to 1
-                chartConfig={chartConfig}
-                bezier
-                style={{
-                    marginVertical: 8,
-                    borderRadius: 16
-                }}
-            />
+                <Box >
+                    <Text>My Wallet</Text>
+                    <Text>Amazon 50% (R$ 499.82)</Text>
+                    <Text>Disney 25% (R$ 249.91)</Text>
+                    <Text>Facebook 25% (R$ 249.91)</Text>
+                </Box>
 
-            <Text>Stocks in your Wallet</Text>
-            <PieChart
-                data={[...dataPie]}
-                width={Dimensions.get("window").width - 48}
-                height={175}
-                chartConfig={chartConfig}
-                accessor={"population"}
-                backgroundColor={"transparent"}
-                paddingLeft={"-20"}
-                center={[25, 0]}
-                absolute
-            />
+                <Box >
+                    <Text>D | W | 30D | M | 12M | Y</Text>
+                    <Text>Profit/Loss</Text>
+                    <Text>98%</Text>
+                    <Text>R$ 4.11</Text>
+                </Box>
 
-            <Button onPress={() => signOut()} >Sign Out</Button>
-        </Container>
+                <Box >
+                    <Text>D | W | 30D | M | 12M | Y</Text>
+                    <Text>My Ranking +</Text>
+                    <Text>Disney +45%</Text>
+                    <Text>Facebook +23%</Text>
+                    <Text>Amazon +6%</Text>
+                </Box>
+
+                <Box >
+                    <Text>D | W | 30D | M | 12M | Y</Text>
+                    <Text>My Ranking -</Text>
+                    <Text>Disney -45%</Text>
+                    <Text>Facebook -23%</Text>
+                    <Text>Amazon -6%</Text>
+                </Box>
+
+            </Container>
+        </>
     )
+
+
+    // return (
+    //     <Container >
+
+    //         <Text>Profit/Loss by Month</Text>
+    //         <LineChart
+    //             data={{
+    //                 labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
+    //                 datasets: [
+    //                     {
+    //                         data: [
+    //                             ...dataLine
+    //                         ]
+    //                     }
+    //                 ]
+    //             }}
+    //             width={Dimensions.get("window").width} // from react-native
+    //             height={220}
+    //             yAxisLabel="€"
+    //             yAxisSuffix=""
+    //             yAxisInterval={1} // optional, defaults to 1
+    //             chartConfig={chartConfig}
+    //             bezier
+    //             style={{
+    //                 marginVertical: 8,
+    //                 borderRadius: 16
+    //             }}
+    //         />
+
+    //         <Text>Stocks in your Wallet</Text>
+    //         <PieChart
+    //             data={[...dataPie]}
+    //             width={Dimensions.get("window").width - 48}
+    //             height={175}
+    //             chartConfig={chartConfig}
+    //             accessor={"population"}
+    //             backgroundColor={"transparent"}
+    //             paddingLeft={"-20"}
+    //             center={[25, 0]}
+    //             absolute
+    //         />
+
+    //         <Button onPress={() => signOut()} >Sign Out</Button>
+    //     </Container>
+    // )
 }
 
 export default Dashboard
