@@ -16,6 +16,7 @@ interface AuthContextData {
     user: object
     signIn(credential: SignInCredential): Promise<void>
     signOut(): void
+    isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData)
@@ -23,12 +24,13 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 export const AuthProvider: React.FC = ({ children }) => {
 
     const [data, setData] = useState<AuthState>({} as AuthState)
+    const [isLoading, setLoading] = useState(true)
 
     useEffect(() => {
-        async function loadAsyncStorage(): Promise<void> {
+        async function loadAsyncStorage() {
             const [token, user] = await AsyncStorage.multiGet([
-                '@GoBarber:token',
-                '@GoBarber:user'
+                '@MenguerWallet:token',
+                '@MenguerWallet:user'
             ])
 
             if (token[1] && user[1]) {
@@ -37,6 +39,8 @@ export const AuthProvider: React.FC = ({ children }) => {
                     user: JSON.parse(user[1])
                 })
             }
+
+            setLoading(false)
         }
 
         loadAsyncStorage()
@@ -73,7 +77,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     }, [])
 
     return (
-        <AuthContext.Provider value={{ user: data.user, signIn, signOut }} >
+        <AuthContext.Provider value={{ user: data.user, signIn, signOut, isLoading }} >
             {children}
         </AuthContext.Provider>
     )
