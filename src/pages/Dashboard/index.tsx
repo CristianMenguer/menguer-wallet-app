@@ -1,13 +1,12 @@
-import React, { useEffect } from 'react'
-import { ScrollView, Text } from 'react-native'
-import { LineChart, PieChart } from 'react-native-chart-kit'
+import React, { useEffect, useState } from 'react'
+import { Text, ScrollView } from 'react-native'
+
 
 import { Container, Box } from './styles'
 
 import Header from '../../components/Header'
 import Company from '../../entities/Company'
-import { AddCompanyDB, LoadCompanyByCodeDB } from '../../models/Company'
-import { startDb } from '../../database'
+import { GetCompaniesDB } from '../../models/Company'
 
 const Dashboard: React.FC = () => {
 
@@ -75,78 +74,87 @@ const Dashboard: React.FC = () => {
         }
     }
 
+    const [textValue, setTextValue] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [companies, setCompanies] = useState<Company[]>([])
+    const [data, setData] = useState([{
+        value: 'Banana',
+    }, {
+        value: 'Mango',
+    }, {
+        value: 'Pear',
+    }])
+
     useEffect(() => {
-        async function test() {
-            let fromDB = await LoadCompanyByCodeDB('CSAN3')
-            console.log('\n\nbefore: ')
-            console.log(fromDB)
-            if (!fromDB || !fromDB.id_api || fromDB.id_api < 1) {
-                const company: Company = {
-                    id_api: 1,
-                    code: 'CSAN3',
-                    code_rdz: 'CSAN',
-                    economic_sector: 'PETRÓLEO, GÁS E BIOCOMBUSTÍVEIS',
-                    name: 'COSAN',
-                    segment: 'PETRÓLEO, GÁS E BIOCOMBUSTÍVEIS',
-                    subsector: 'PETRÓLEO, GÁS E BIOCOMBUSTÍVEIS',
-                    created_at: new Date(),
-                    updated_at: new Date()
-
-                }
-
-                await AddCompanyDB(company)
-
-                fromDB = await LoadCompanyByCodeDB('CSAN3')
-                console.log('\n\nafter: ')
-                console.log(fromDB)
-            }
-        }
-
-        async function test2() {
-            const db = await startDb()
-            console.log(db)
-        }
-
-        test()
-
+        GetCompaniesDB()
+            .then(response => {
+                setCompanies(response)
+                //
+                const allDrop = data
+                response.map(company => {
+                    allDrop.push()
+                })
+                setData(allDrop)
+                //
+            })
     }, [])
+
+    function _onChangeText(text: string) {
+        setTextValue(text)
+        setIsLoading(true)
+        console.log(text)
+    }
+
 
     return (
         <>
             <Header />
             <Container >
-                <Text>Total Balance: R$ 999.64</Text>
+                <ScrollView style={{
+                    width: '100%'
+                }} >
 
-                <Box >
-                    <Text>My Wallet</Text>
-                    <Text>Amazon 50% (R$ 499.82)</Text>
-                    <Text>Disney 25% (R$ 249.91)</Text>
-                    <Text>Facebook 25% (R$ 249.91)</Text>
-                </Box>
+                    <Box >
 
-                <Box >
-                    <Text>D | W | 30D | M | 12M | Y</Text>
-                    <Text>Profit/Loss</Text>
-                    <Text>98%</Text>
-                    <Text>R$ 4.11</Text>
-                </Box>
+                        {!!companies && companies.length > 0 && (
+                            companies.map(company => (
+                                <Text key={company.id_api} >{company.name}</Text>
+                            ))
+                        )}
+                    </Box>
 
-                <Box >
-                    <Text>D | W | 30D | M | 12M | Y</Text>
-                    <Text>My Ranking +</Text>
-                    <Text>Disney +45%</Text>
-                    <Text>Facebook +23%</Text>
-                    <Text>Amazon +6%</Text>
-                </Box>
+                    <Text>Total Balance: R$ 999.64</Text>
 
-                <Box >
-                    <Text>D | W | 30D | M | 12M | Y</Text>
-                    <Text>My Ranking -</Text>
-                    <Text>Disney -45%</Text>
-                    <Text>Facebook -23%</Text>
-                    <Text>Amazon -6%</Text>
-                </Box>
+                    <Box >
+                        <Text>My Wallet</Text>
+                        <Text>Amazon 50% (R$ 499.82)</Text>
+                        <Text>Disney 25% (R$ 249.91)</Text>
+                        <Text>Facebook 25% (R$ 249.91)</Text>
+                    </Box>
 
+                    <Box >
+                        <Text>D | W | 30D | M | 12M | Y</Text>
+                        <Text>Profit/Loss</Text>
+                        <Text>98%</Text>
+                        <Text>R$ 4.11</Text>
+                    </Box>
+
+                    <Box >
+                        <Text>D | W | 30D | M | 12M | Y</Text>
+                        <Text>My Ranking +</Text>
+                        <Text>Disney +45%</Text>
+                        <Text>Facebook +23%</Text>
+                        <Text>Amazon +6%</Text>
+                    </Box>
+
+                    <Box >
+                        <Text>D | W | 30D | M | 12M | Y</Text>
+                        <Text>My Ranking -</Text>
+                        <Text>Disney -45%</Text>
+                        <Text>Facebook -23%</Text>
+                        <Text>Amazon -6%</Text>
+                    </Box>
+                </ScrollView>
             </Container>
         </>
     )

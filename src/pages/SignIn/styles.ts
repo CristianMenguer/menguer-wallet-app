@@ -1,4 +1,5 @@
 import styled from 'styled-components/native'
+import { text } from '../../theme'
 
 export const Container = styled.View`
     flex: 1;
@@ -7,11 +8,12 @@ export const Container = styled.View`
     padding: 0 30px 100px;
 `
 
+
 export const Title = styled.Text`
     font-size: 20px;
-    font-family: 'RobotoSlab-Regular';
     color: #312e38;
     margin: 64px 0 24px;
+    ${text.default}
 `
 
 export const ForgotPasswordButton = styled.TouchableOpacity`
@@ -20,8 +22,8 @@ export const ForgotPasswordButton = styled.TouchableOpacity`
 
 export const ForgotPasswordText = styled.Text`
     font-size: 14px;
-    font-family: 'RobotoSlab-Regular';
     color: #312e38;
+    ${text.default}
 `
 
 export const CreateAccountButton = styled.TouchableOpacity`

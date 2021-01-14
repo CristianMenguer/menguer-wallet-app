@@ -16,7 +16,7 @@ interface AuthContextData {
     user: object
     signIn(credential: SignInCredential): Promise<void>
     signOut(): void
-    isLoading: boolean
+    isLoadingAuth: boolean
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData)
@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 export const AuthProvider: React.FC = ({ children }) => {
 
     const [data, setData] = useState<AuthState>({} as AuthState)
-    const [isLoading, setLoading] = useState(true)
+    const [isLoadingAuth, setLoadingAuth] = useState(true)
 
     useEffect(() => {
         async function loadAsyncStorage() {
@@ -38,9 +38,11 @@ export const AuthProvider: React.FC = ({ children }) => {
                     token: token[1],
                     user: JSON.parse(user[1])
                 })
+                //
+                api.defaults.headers.authorization = `Bearer ${token[1]}`
             }
 
-            setLoading(false)
+            setLoadingAuth(false)
         }
 
         loadAsyncStorage()
@@ -61,6 +63,8 @@ export const AuthProvider: React.FC = ({ children }) => {
             ['@MenguerWallet:user', JSON.stringify(user)]
         ])
 
+        api.defaults.headers.authorization = `Bearer ${token}`
+
         setData({ token, user })
 
     }, [])
@@ -77,7 +81,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     }, [])
 
     return (
-        <AuthContext.Provider value={{ user: data.user, signIn, signOut, isLoading }} >
+        <AuthContext.Provider value={{ user: data.user, signIn, signOut, isLoadingAuth }} >
             {children}
         </AuthContext.Provider>
     )

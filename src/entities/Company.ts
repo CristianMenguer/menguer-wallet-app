@@ -1,7 +1,5 @@
-import Quote from "./Quote"
-
 class Company {
-    _id?: string
+    id?: number
     id_api: number
     name: string
     code: string
@@ -9,7 +7,6 @@ class Company {
     economic_sector: string
     subsector: string
     segment: string
-    quotes?: Quote[]
     created_at?: Date
     updated_at?: Date
 

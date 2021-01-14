@@ -1,4 +1,4 @@
-import { selectDB, insertDB } from '../database'
+import { selectDB, insertDB, countDB, insertOrIgnoreDB } from '../database'
 import Company from '../entities/Company'
 
 const tableName = 'company'
@@ -15,23 +15,41 @@ export const LoadCompanyByCodeDB = async (code: string): Promise<Company> => {
 
 }
 
+export const GetCompaniesDB = async (): Promise<Company[]> => {
+
+    const response = await selectDB(tableName)
+
+    return response as Company[]
+
+}
+
+// This function receives the currency base, retrieves the rate from the database and returns it.
+export const GetTotalCompaniesDB = async (): Promise<number> => {
+
+    const response = await countDB(tableName) as number
+
+    //
+    return response
+
+}
+
 // This function receives a currency object and saves it to the database and returns the object saved
 // with the new ID.
 export const AddCompanyDB = async (props: Company): Promise<Company> => {
     if (!props || !props.id_api)
         return props
     //
-    const sql = `insert into ${tableName} (` +
+    const sql = `insert or ignore into ${tableName} (` +
         'id_api, name, code, code_rdz, economic_sector, subsector, segment, created_at, updated_at ' +
         ' ) values ( ' +
         ` ${props.id_api}, '${props.name}', '${props.code}', '${props.code_rdz}', ` +
         ` '${props.economic_sector}', '${props.subsector}', '${props.segment}', ${props.created_at?.getTime()}, ${props.updated_at?.getTime()}  )`
     //
 
-    const idInserted = await insertDB(sql)
+    const idInserted = await insertOrIgnoreDB(sql)
 
     if (idInserted > 0)
-        props.id_api = idInserted
+        props.id = idInserted
     //
     return props
 

@@ -1,10 +1,13 @@
 import React from 'react'
 
 import { AuthProvider } from './auth'
+import { LoadDataProvider } from './loadData'
 
 const AppProvider: React.FC = ({ children }) => (
     <AuthProvider >
-        {children}
+        <LoadDataProvider >
+            {children}
+        </LoadDataProvider>
     </AuthProvider>
 )
 
