@@ -13,6 +13,7 @@ const getDB = async (): Promise<SQLite.SQLiteDatabase> => {
     if (!!APP_DB)
         return APP_DB
 
+    console.log('...opening db...')
     // SQLite.DEBUG(true)
     SQLite.enablePromise(true)
 
@@ -41,15 +42,27 @@ export const createTablesDB = async (): Promise<boolean> => {
     queries.push('create table if not exists company (' +
         ' id integer primary key, id_api integer, name text, code text unique, code_rdz text, ' +
         ' economic_sector text, subsector text, segment text, created_at real, updated_at real)')
-
+    //
     queries.push('create table if not exists stock (' +
         ' id integer primary key, company_id integer, code text unique, created_at real, updated_at real)')
     //
+    queries.push('drop table if exists wallet')
+    queries.push('create table if not exists wallet (' +
+        ' id integer primary key, stock_id integer, dateTransaction real, quantity number, ' +
+        ' price number, fees number, total number, ' +
+        ' created_at real, updated_at real)')
+    //
+    queries.push('insert into wallet (' +
+        ' stock_id, dateTransaction, quantity, price, fees, total, created_at, updated_at) values (' +
+        ' 6, ' + (new Date(2020, 6, 30)).getTime() +
+        ', 300, 62.37, 4.97, 18715.97, ' + (new Date().getTime()) + ', ' + (new Date().getTime()) +
+        ' )')
+    //
     while (queries.length > 0) {
-        const sql = queries[0]
-        queries.shift()
+        const sql = queries.shift()
         //
-        await execSql(sql)
+        if (!!sql)
+            await execSql(sql)
     }
     //
     return true
@@ -63,6 +76,8 @@ export const dropTablesDB = async (): Promise<boolean> => {
     queries.push('drop table if exists company')
 
     queries.push('drop table if exists stock')
+
+    queries.push('drop table if exists wallet')
     //
     while (queries.length > 0) {
         const sql = queries[0]
@@ -163,10 +178,11 @@ export const selectDB = async (tableName: string, where: string = '') => {
     const db = await getDB()
 
     const sql = `select * from ${tableName} ${where != '' ? 'where ' + where : ''}`
+    console.log(`sql: ${sql}`)
 
     return new Promise<Object[]>((resolve, reject) => {
         db.transaction(tx => {
-            tx.executeSql(sql, [], async (trans, results) => {
+            tx.executeSql(sql, [], (trans, results) => {
                 let objs: Object[] = []
                 for (let index = 0; index < results.rows.length; index++)
                     objs.push(results.rows.item(index))
@@ -231,6 +247,31 @@ export const countDB = async (tableName: string, where: string = ''): Promise<nu
             reject(error)
         }, () => {
             resolve(0)
+        })
+    })
+}
+
+export const CustomSelectDB = async (sql: string) => {
+    const db = await getDB()
+
+    //console.log(`CustomSelectDB sql: ${sql}`)
+
+    return new Promise<Object[]>((resolve, reject) => {
+        db.transaction(tx => {
+            tx.executeSql(sql, [], (trans, results) => {
+                let objs: Object[] = []
+                for (let index = 0; index < results.rows.length; index++)
+                    objs.push(results.rows.item(index))
+                //
+                resolve(objs)
+            })
+        }, (error) => {
+            console.log('> Database.index > CustomSelectDB:')
+            console.log(error)
+            console.log(sql)
+            reject(error)
+        }, () => {
+            resolve([])
         })
     })
 }

@@ -19,12 +19,12 @@ const Routes: React.FC = () => {
         setIsLoading(isLoadingData)
     }, [isLoadingData])
 
-    if (isLoading)
-        return <Loading />
-    //
-    return (!!user ? <AppRoutes /> : <AuthRoutes />)
+    // if (isLoading)
+    //     return <Loading />
+    // //
+    // return (!!user ? <AppRoutes /> : <AuthRoutes />)
 
-    //return <Loading />
+    return <AppRoutes />
 }
 
 export default Routes

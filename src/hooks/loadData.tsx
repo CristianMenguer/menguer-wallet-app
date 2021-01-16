@@ -23,6 +23,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
 
     const loadCompanies = useCallback(async () => {
         console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+        console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
         console.log('Starting loadCompanies')
         //
         const recreateDB = false
@@ -49,7 +50,6 @@ export const LoadDataProvider: React.FC = ({ children }) => {
                 const companies = response.data as CompanyResponse[]
                 //     //
                 while (companies.length > 0) {
-                    //await sleep(20)
                     console.log('---------------------------------------')
                     console.log(`companies.length: ${companies.length}`)
 
