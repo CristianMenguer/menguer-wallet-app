@@ -1,6 +1,8 @@
+import Stock from "./Stock"
+
 class Quote {
-    _id?: string
-    id_company: number
+    id?: number
+    id_stock: number
     code_stock: string
     open: number
     close: number
@@ -10,11 +12,11 @@ class Quote {
     date: Date
     dividend: number
     coefficient: number
-    created_at?: Date
-    updated_at?: Date
+    created_at: Date
+    updated_at: Date
 
-	constructor(id_company: number, code_stock: string, open: number, close: number, max: number, min: number, volume: number, date: Date, dividend: number, coefficient: number) {
-        this.id_company = id_company
+	constructor(id_stock: number, code_stock: string, open: number, close: number, max: number, min: number, volume: number, date: Date, dividend: number, coefficient: number) {
+        this.id_stock = id_stock
         this.code_stock = code_stock
         this.open = open
         this.close = close

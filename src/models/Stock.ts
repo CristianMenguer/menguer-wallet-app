@@ -8,7 +8,7 @@ export const GetStockByCodeDB = async (code: string): Promise<Stock> => {
 
     const response = await selectDB(tableName, `code = '${code}'`) as Stock[]
 
-    if (response.length == 0 || response.length > 1)
+    if (!response || !response.length || response.length == 0)
         return {} as Stock
     //
     return response[0]
@@ -49,7 +49,9 @@ export const GetTotalStocksDB = async (): Promise<number> => {
 export const GetStocksDB = async (): Promise<Stock[]> => {
 
     const response = await selectDB(tableName) as Stock[]
-
+    //
+    if (!response || !response.length || response.length == 0)
+        return [] as Stock[]
     //
     return response
 

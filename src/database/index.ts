@@ -12,9 +12,8 @@ let APP_DB: SQLite.SQLiteDatabase
 const getDB = async (): Promise<SQLite.SQLiteDatabase> => {
     if (!!APP_DB)
         return APP_DB
-
-    console.log('...opening db...')
-    // SQLite.DEBUG(true)
+    //
+    //SQLite.DEBUG(true)
     SQLite.enablePromise(true)
 
     return new Promise<SQLite.SQLiteDatabase>((resolve, reject) => {
@@ -46,18 +45,15 @@ export const createTablesDB = async (): Promise<boolean> => {
     queries.push('create table if not exists stock (' +
         ' id integer primary key, company_id integer, code text unique, created_at real, updated_at real)')
     //
-    queries.push('drop table if exists wallet')
     queries.push('create table if not exists wallet (' +
         ' id integer primary key, stock_id integer, dateTransaction real, quantity number, ' +
         ' price number, fees number, total number, ' +
         ' created_at real, updated_at real)')
     //
-    queries.push('insert into wallet (' +
-        ' stock_id, dateTransaction, quantity, price, fees, total, created_at, updated_at) values (' +
-        ' 6, ' + (new Date(2020, 6, 30)).getTime() +
-        ', 300, 62.37, 4.97, 18715.97, ' + (new Date().getTime()) + ', ' + (new Date().getTime()) +
-        ' )')
-    //
+    queries.push('create table if not exists quote (' +
+        ' id integer, id_stock integer, code_stock text, open number, close number, ' +
+        ' max number, min number, volume number, date real, dividend number, ' +
+        ' coefficient number, created_at real, updated_at real)')
     while (queries.length > 0) {
         const sql = queries.shift()
         //
@@ -80,10 +76,10 @@ export const dropTablesDB = async (): Promise<boolean> => {
     queries.push('drop table if exists wallet')
     //
     while (queries.length > 0) {
-        const sql = queries[0]
-        queries.shift()
+        const sql = queries.shift()
         //
-        await execSql(sql)
+        if (!!sql)
+            await execSql(sql)
     }
     //
     return true
@@ -95,23 +91,22 @@ export const insertDB = async (sql: string): Promise<number> => {
     const db = await getDB()
 
     return new Promise<number>((resolve, reject) => {
-        db.transaction(async (tx) => {
-            await tx.executeSql(sql, [], (tx, results) => {
+        db.transaction((tx) => {
+            tx.executeSql(sql, [], (trans, results) => {
                 //
                 if (results.insertId > 0) {
                     resolve(results.insertId)
                 } else {
-                    console.log('> Database.index > insertDB.insertId == 0')
-                    reject(0)
+                    //console.log('> Database.index > insertDB.insertId == 0')
+                    resolve(0)
                 }
                 //
+            }, (error) => {
+                console.log('> Database.index > insertDB:')
+                console.log(error)
+                console.log(sql)
+                reject(error)
             })
-
-        }, (error) => {
-            console.log('> Database.index > insertDB:')
-            console.log(error)
-            console.log(sql)
-            reject(0)
         })
     })
 }
@@ -124,37 +119,29 @@ export const insertOrIgnoreDB = async (sql: string): Promise<number> => {
         db.transaction((tx) => {
             tx.executeSql(sql, [], (tx, results) => {
                 //
-                if (results.insertId > 0) {
+                if (results.insertId > 0)
                     resolve(results.insertId)
-                } else {
-                    //console.log('> Database.index > insertDB.insertId == 0')
+                else
                     resolve(0)
-                }
                 //
             }, (err) => {
                 console.log('> Database.index > insertOrIgnoreDB:')
                 console.log(err)
                 console.log(sql)
-                reject(0)
+                reject(err)
             })
-
-        }, (error) => {
-            console.log('> Database.index > insertDB:')
-            console.log(error)
-            console.log(sql)
-            reject(0)
         })
     })
 }
 
 // This function receives a sql command and executes it, returning true if it succeeds
-export const execSql = async (sql: string): Promise<boolean> => {
+export const execSql = async (sql: string): Promise<SQLite.ResultSet> => {
     const db = await getDB()
 
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<SQLite.ResultSet>((resolve, reject) => {
         db.transaction(tx => {
             tx.executeSql(sql, [], (trans, results) => {
-                resolve(true)
+                resolve(results)
                 //
             }, (error) => {
                 console.log('> Database.index > execSql')
@@ -163,11 +150,6 @@ export const execSql = async (sql: string): Promise<boolean> => {
                 reject(error)
             })
 
-        }, (error) => {
-            console.log(`> Database.index > execSql: ${error}`)
-            reject(false)
-        }, () => {
-            resolve(true)
         })
     })
 }
@@ -178,7 +160,7 @@ export const selectDB = async (tableName: string, where: string = '') => {
     const db = await getDB()
 
     const sql = `select * from ${tableName} ${where != '' ? 'where ' + where : ''}`
-    console.log(`sql: ${sql}`)
+    //console.log(`sql: ${sql}`)
 
     return new Promise<Object[]>((resolve, reject) => {
         db.transaction(tx => {
@@ -188,14 +170,12 @@ export const selectDB = async (tableName: string, where: string = '') => {
                     objs.push(results.rows.item(index))
                 //
                 resolve(objs)
+            }, (error) => {
+                console.log('> Database.index > select:')
+                console.log(error)
+                console.log(sql)
+                reject(error)
             })
-        }, (error) => {
-            console.log('> Database.index > select:')
-            console.log(error)
-            console.log(sql)
-            reject(error)
-        }, () => {
-            resolve([])
         })
     })
 }
@@ -206,20 +186,19 @@ export const selectByIdDB = async (tableName: string, id: number) => {
     const sql = `select * from ${tableName} where id = ${id}`
 
     return new Promise<Object>((resolve, reject) => {
-        db.transaction((transaction) => {
-            transaction.executeSql(sql, [], (transaction, results) => {
+        db.transaction((tx) => {
+            tx.executeSql(sql, [], (transaction, results) => {
                 if (results.rows.length > 0) {
                     resolve(results.rows.item(0))
                 } else {
                     resolve([])
                 }
+            }, (error) => {
+                console.log('> Database.index > select:')
+                console.log(error)
+                console.log(sql)
+                reject(error)
             })
-
-        }, (error) => {
-            console.log('> Database.index > select:')
-            console.log(error)
-            console.log(sql)
-            reject(error)
         })
     })
 }
@@ -238,15 +217,12 @@ export const countDB = async (tableName: string, where: string = ''): Promise<nu
                 } else {
                     resolve(0)
                 }
+            }, (error) => {
+                console.log('> Database.index > countDB:')
+                console.log(error)
+                console.log(sql)
+                reject(error)
             })
-
-        }, (error) => {
-            console.log('> Database.index > countDB:')
-            console.log(error)
-            console.log(sql)
-            reject(error)
-        }, () => {
-            resolve(0)
         })
     })
 }
@@ -260,18 +236,17 @@ export const CustomSelectDB = async (sql: string) => {
         db.transaction(tx => {
             tx.executeSql(sql, [], (trans, results) => {
                 let objs: Object[] = []
+                //console.log(results)
                 for (let index = 0; index < results.rows.length; index++)
                     objs.push(results.rows.item(index))
                 //
                 resolve(objs)
+            }, (error) => {
+                console.log('> Database.index > CustomSelectDB:')
+                console.log(error)
+                console.log(sql)
+                reject(error)
             })
-        }, (error) => {
-            console.log('> Database.index > CustomSelectDB:')
-            console.log(error)
-            console.log(sql)
-            reject(error)
-        }, () => {
-            resolve([])
         })
     })
 }

@@ -3,5 +3,6 @@ interface OpenPosition {
     name: string
     quantity: number
     price: number
-    total: number
+    totalPaid: number
+    totalNow: number
 }

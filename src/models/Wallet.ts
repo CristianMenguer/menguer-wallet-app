@@ -1,4 +1,4 @@
-import { selectDB, insertDB, countDB, CustomSelectDB } from '../database'
+import { selectDB, insertDB, countDB, CustomSelectDB, createTablesDB, dropTablesDB } from '../database'
 import Wallet from '../entities/Wallet'
 
 const tableName = 'wallet'
@@ -8,7 +8,7 @@ export const GetWalletsDB = async (): Promise<Wallet[]> => {
 
     const response = await selectDB(tableName) as Wallet[]
 
-    if (response.length == 0 || response.length > 1)
+    if (!response || !response.length || response.length === 0)
         return {} as Wallet[]
     //
     return response
@@ -26,6 +26,7 @@ export const AddWalletDB = async (props: Wallet): Promise<Wallet> => {
         ` ${props.stock_id}, ${props.dateTransaction.getTime()}, ${props.quantity}, ` +
         `${props.price}, ${props.fees}, ${props.total}, ${props.created_at.getTime()}, ${props.updated_at.getTime()}  )`
     //
+    console.log(`sql: ${sql}`)
     const idInserted = await insertDB(sql)
 
     if (idInserted > 0)
@@ -46,13 +47,15 @@ export const GetTotalWalletsDB = async (): Promise<number> => {
 export const LoadOpenPositions = async (quantity: number = 3): Promise<OpenPosition[]> => {
 
     const response = await CustomSelectDB('select ' +
-        ' sto.code, coalesce(com.name, "") as name, sum(wal.quantity) as quantity, sum(wal.total) as total, (sum(wal.total) / sum(wal.quantity)) as price ' +
+        ' sto.code, coalesce(com.name, "") as name, sum(wal.quantity) as quantity, 0 as totalNow, ' +
+        ' sum(wal.total) as totalPaid, (sum(wal.total) / sum(wal.quantity)) as price ' +
         ' from wallet wal ' +
         ' join stock sto on sto.id = wal.stock_id ' +
-        ' left join company com on sto.company_id = com.id ' +
-        ' ORDER BY stock_id limit ' + quantity) as OpenPosition[]
+        ' join company com on sto.company_id = com.id ' +
+        ' GROUP BY sto.code, name ORDER BY total DESC ' +
+        ' LIMIT ' + quantity) as OpenPosition[]
 
-    if (response.length == 0 || response.length > 1)
+    if (!response || !response.length || response.length == 0)
         return {} as OpenPosition[]
     //
     return response

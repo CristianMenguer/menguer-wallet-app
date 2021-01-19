@@ -8,7 +8,7 @@ export const LoadCompanyByCodeDB = async (code: string): Promise<Company> => {
 
     const response = await selectDB(tableName, `code = '${code}'`) as Company[]
 
-    if (response.length == 0 || response.length > 1)
+    if (!response || !response.length || response.length == 0)
         return {} as Company
     //
     return response[0]
@@ -18,6 +18,9 @@ export const LoadCompanyByCodeDB = async (code: string): Promise<Company> => {
 export const GetCompaniesDB = async (): Promise<Company[]> => {
 
     const response = await selectDB(tableName)
+
+    if (!response || !response.length || response.length == 0)
+        return []
 
     return response as Company[]
 
@@ -52,5 +55,4 @@ export const AddCompanyDB = async (props: Company): Promise<Company> => {
         props.id = idInserted
     //
     return props
-
 }

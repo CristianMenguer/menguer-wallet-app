@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, ScrollView } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/Feather'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useIsFocused } from '@react-navigation/native'
+import Modal from 'react-native-modal'
 
 import { Container, TitleBalance, Box, BoxTouch, BoxTitle, BoxInfo, BoxTile, AddTransactionButton, TabButtons, TabButtonItem, TabButtonItemText } from './styles'
 
 import Header from '../../components/Header'
 import Company from '../../entities/Company'
-import { GetCompaniesDB } from '../../models/Company'
-import { GetTotalWalletsDB, LoadOpenPositions, LoadWallets } from '../../models/Wallet'
-import { createTablesDB } from '../../database'
-import { GetStocksDB } from '../../models/Stock'
+import useWallet from '../../hooks/wallet'
+import { colors } from '../../constants/colors'
 
 const Dashboard: React.FC = () => {
 
     const navigation = useNavigation()
+    const isFocused = useIsFocused()
+
+    const { loadMyPosition } = useWallet()
+
 
     const dataLine = [
         Math.random() * 1000 - 200,
@@ -82,6 +85,7 @@ const Dashboard: React.FC = () => {
 
     const [textValue, setTextValue] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const [isModalWalletVisible, setModalWalletVisible] = useState(false)
     const [profitLossIndex, setProfitLossIndex] = useState(0)
     const [rankingPositiveIndex, setRankingPositiveIndex] = useState(0)
     const [rankingNegativeIndex, setRankingNegativeIndex] = useState(0)
@@ -96,44 +100,28 @@ const Dashboard: React.FC = () => {
     }])
 
     useEffect(() => {
-        return
-
-        //createTablesDB()
-
-        // GetCompaniesDB()
-        //     .then(response => {
-        //         setCompanies(response)
+        if (!isFocused)
+            return
+        //
+        // loadMyPosition()
+        //     .then(myData => {
+        //         console.log('myData:')
+        //         console.log(myData)
+        //         const wallet = myWallet
+        //         while (wallet.length > 0)
+        //             wallet.shift()
         //         //
-        //         const allDrop = data
-        //         response.map(company => {
-        //             allDrop.push()
-        //         })
-        //         setData(allDrop)
-        //         //
+        //         if (!!myData && myData.openPosition.length > 0) {
+        //             myData.openPosition.map(position => {
+        //                 const newPos = position
+        //                 newPos.totalNow = newPos.totalPaid + (Math.trunc(newPos.totalPaid * (Math.random() - 0.35)))
+        //                 wallet.push(newPos)
+        //             })
+
+        //             setMyWallet(wallet)
+        //         }
         //     })
-        //
-        //
-        LoadWallets()
-            .then(response => {
-                console.log(response)
-            })
-        //
-        LoadOpenPositions()
-            .then(response => {
-                const wallet = myWallet
-                while (wallet.length > 0)
-                    wallet.shift()
-                //
-                if (!!response && response.length > 0) {
-                    response.map(position => {
-                        //console.log(position)
-                        wallet.push(position)
-                    })
-                    setMyWallet(wallet)
-                }
-            })
-        //
-    }, [])
+    }, [isFocused])
 
 
     return (
@@ -163,17 +151,14 @@ const Dashboard: React.FC = () => {
                         </BoxTile>
                         {!!myWallet && myWallet.length > 0 && (
                             myWallet.map(position => (
-                                <BoxInfo key={position.code} >{position.name} (R$ {position.total})</BoxInfo>
+                                <BoxInfo key={position.code} >{position.name} (Paid: R$ {position.totalPaid}) (Now: R$ {position.totalNow})</BoxInfo>
                             ))
 
                         )}
-                        <BoxInfo>Amazon 50% (R$ 499.82)</BoxInfo>
-                        <BoxInfo>Disney 25% (R$ 249.91)</BoxInfo>
-                        <BoxInfo>Facebook 25% (R$ 249.91)</BoxInfo>
                     </Box>
 
                     <BoxTouch onPress={() => {
-                        alert('Box pressed!')
+                        setModalWalletVisible(true)
                     }} >
                         <BoxTile >
                             <BoxTitle>Profit/Loss</BoxTitle>
@@ -263,6 +248,38 @@ const Dashboard: React.FC = () => {
 
                 </ScrollView>
             </Container>
+
+            <Modal
+                isVisible={isModalWalletVisible}
+                style={{
+                    backgroundColor: 'white',
+                    maxHeight: '50%',
+                    width: '90%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                    marginTop: 200,
+                    borderRadius: 20,
+                    borderWidth: 2,
+                    borderColor: colors.orange,
+
+                }}
+                onBackButtonPress={() => setModalWalletVisible(false)}
+                onBackdropPress={() => setModalWalletVisible(false)}
+                swipeDirection='left'
+                animationIn='zoomInDown'
+                animationOut='zoomOutUp'
+                backdropColor='black'
+                backdropOpacity={0.75}
+                backdropTransitionInTiming={750}
+                backdropTransitionOutTiming={750}
+            >
+                <View style={{ flex: 1, justifyContent: 'center',alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => setModalWalletVisible(false)} >
+                        <Text>Close Modal!</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         </>
     )
 

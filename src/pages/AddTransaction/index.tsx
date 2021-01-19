@@ -18,6 +18,8 @@ import Wallet from '../../entities/Wallet'
 import { GetStockByCodeDB, GetStocksDB } from '../../models/Stock'
 import { AddWalletDB, GetTotalWalletsDB, GetWalletsDB, LoadOpenPositions } from '../../models/Wallet'
 import { sleep } from '../../utils/Utils'
+import { GetCompaniesDB } from '../../models/Company'
+import useWallet from '../../hooks/wallet'
 
 interface AddTransactionFormData {
     date: Date
@@ -31,6 +33,8 @@ interface AddTransactionFormData {
 const AddTransaction: React.FC = () => {
 
     const navigation = useNavigation()
+    const { loadMyPosition } = useWallet()
+
     const formRef = useRef<FormHandles>(null)
     const dateRef = useRef<TextInput>(null)
     const stockRef = useRef<TextInput>(null)
@@ -40,13 +44,19 @@ const AddTransaction: React.FC = () => {
     const totalRef = useRef<TextInput>(null)
 
     useEffect(() => {
-        LoadOpenPositions()
-        .then(wallets => {
-            console.log(wallets)
-            // wallets.map(wallet => {
-            //     console.log(wallet)
-            // })
-        })
+
+        // GetCompaniesDB()
+        //     .then(companies => {
+        //         console.log('\n\nCompanies:')
+        //         console.log(companies)
+        //     })
+
+        GetWalletsDB()
+            .then(wallets => {
+                console.log('\n\nWallets:')
+                console.log(wallets)
+            })
+
     }, [])
 
     const handleAddTransaction = useCallback(async (data: AddTransactionFormData) => {
@@ -73,6 +83,7 @@ const AddTransaction: React.FC = () => {
                 const walletAdded = await AddWalletDB(wallet)
                 console.log(walletAdded)
                 showToast('Transaction created!')
+                await loadMyPosition()
                 await sleep(250)
                 navigation.goBack()
             } else {

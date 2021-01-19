@@ -2,11 +2,14 @@ import React from 'react'
 
 import { AuthProvider } from './auth'
 import { LoadDataProvider } from './loadData'
+import { WalletProvider } from './wallet'
 
 const AppProvider: React.FC = ({ children }) => (
     <AuthProvider >
         <LoadDataProvider >
-            {children}
+            <WalletProvider >
+                {children}
+            </WalletProvider>
         </LoadDataProvider>
     </AuthProvider>
 )

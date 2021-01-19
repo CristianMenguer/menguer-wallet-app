@@ -1,13 +1,15 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
 import api from '../services/api'
 import { GetTotalCompaniesDB } from '../models/Company'
-import { GetTotalStocksDB } from '../models/Stock'
+import { GetStocksDB, GetTotalStocksDB } from '../models/Stock'
 import Company from '../entities/Company'
-import { replaceAll, sleep } from '../utils/Utils'
+import { dateToAPI, replaceAll, sleep } from '../utils/Utils'
 import { addCompanyIfNotDB } from '../services/AddCompanyIfNotInDBService'
 import Stock from '../entities/Stock'
 import { addStockIfNotDB } from '../services/AddStockIfNotInDBService'
 import { dropTablesDB, createTablesDB } from '../database'
+import { AddQuoteDB, GetLastQuoteDB, GetQuotesByCodeDB } from '../models/Quote'
+import Quote from '../entities/Quote'
 
 
 interface LoadDataContextData {
@@ -28,6 +30,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
         //
         const recreateDB = false
         const refreshCompanyDB = false
+        const refreshQuotesDB = true
         //
         if (recreateDB) {
             console.log('Before Drop')
@@ -50,6 +53,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
                 const companies = response.data as CompanyResponse[]
                 //     //
                 while (companies.length > 0) {
+                    console.log('\n')
                     console.log('---------------------------------------')
                     console.log(`companies.length: ${companies.length}`)
 
@@ -71,12 +75,13 @@ export const LoadDataProvider: React.FC = ({ children }) => {
                         //
                         if (!!companyAdded.id && companyAdded.id > 0) {
                             const newStock = new Stock(companyAdded, code)
-                            console.log('Stock object created')
+                            //console.log('Stock object created')
                             const stockAdded = await addStockIfNotDB(newStock)
                             console.log(`Stock added: ${stockAdded.code}`)
                         }
                     }
                     console.log('---------------------------------------')
+                    console.log('\n')
                 }
             }
 
@@ -85,9 +90,67 @@ export const LoadDataProvider: React.FC = ({ children }) => {
             console.log(`DB ==> total companies: ${companiesSQLite} ==> total stocks: ${stocksSQLite}`)
         }
 
+        if (refreshQuotesDB) {
+            let date = new Date()
+            date.setFullYear(date.getFullYear() - 1)
+            await loadQuotes(date)
+        }
+        //
         setLoadingData(false)
     }, [])
 
+    const loadQuotes = useCallback(async (startDate: Date) => {
+        console.log('\n\nLoad Quotes:')
+        const stocks = await GetStocksDB()
+        console.log(`stocks.length: ${stocks.length}`)
+        //
+        let counter = 0
+        while (stocks.length > 0) {
+            const stock = stocks.shift()
+            if (!!stock && stock.code.length > 4 && stock.id && stock.id > 0) {
+                counter++
+                if (counter < 4) {
+                    console.log('\n\n')
+                    console.log(`stocks.length: ${stocks.length}`)
+                    console.log(stock.code)
+                    //
+                    const response = await api.get(`/quotes/${stock.code}`)
+                    if (!!response && !!response.data && !!(response.data as Quote).date) {
+                        const lastQuoteAPI = response.data as Quote
+                        const lastQuoteSQLite = await GetLastQuoteDB(stock.code)
+                        const quotesSQLite = await GetQuotesByCodeDB(stock.code)
+                        console.log(`quotesSQLite: ${quotesSQLite.length}`)
+                        //
+                        if ((!lastQuoteSQLite || !lastQuoteSQLite.date || lastQuoteAPI.date > lastQuoteSQLite.date)) {
+                            const response = await api.get(`/quotes/${stock.code}?dateFrom=${dateToAPI(startDate)}`)
+                            if (!!response && !!response.data && !!response.data[0]) {
+                                const quotesAPI = response.data as Quote[]
+                                let counterAdded = 0
+                                while (quotesAPI.length > 0) {
+                                    const quoteAPI = quotesAPI.shift()
+                                    //
+                                    if (!!quoteAPI &&
+                                        (!lastQuoteSQLite || !lastQuoteSQLite.date || quoteAPI.date > lastQuoteSQLite.date) &&
+                                        (quotesSQLite.filter(quote => quote.date === quoteAPI.date).length < 1)) {
+                                        //
+                                        const quoteToBeAdded = new Quote(stock.id, stock.code, quoteAPI.open, quoteAPI.close,
+                                            quoteAPI.max, quoteAPI.min, quoteAPI.volume, new Date(quoteAPI.date), quoteAPI.dividend,
+                                            quoteAPI.coefficient)
+                                        //
+                                        const quoteAdded = await AddQuoteDB(quoteToBeAdded)
+                                        counterAdded++
+                                    }
+                                }
+                                console.log(`Quotes Added: ${counterAdded}`)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+    }, [])
 
 
     return (
