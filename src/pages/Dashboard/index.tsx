@@ -16,7 +16,7 @@ const Dashboard: React.FC = () => {
     const navigation = useNavigation()
     const isFocused = useIsFocused()
 
-    const { loadMyPosition } = useWallet()
+    const { loadMyPosition, myDataInfo } = useWallet()
 
 
     const dataLine = [
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
                     }}
                 >
 
-                    <TitleBalance>Total Balance: R$ 999.64</TitleBalance>
+                    <TitleBalance>Total Balance: R$ {myDataInfo.totalBalance}</TitleBalance>
 
                     <Box >
                         <BoxTile >

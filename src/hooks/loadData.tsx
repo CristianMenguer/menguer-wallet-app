@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
 import api from '../services/api'
 import { GetTotalCompaniesDB } from '../models/Company'
-import { GetStocksDB, GetTotalStocksDB } from '../models/Stock'
+import { GetStockByCodeDB, GetStocksDB, GetTotalStocksDB } from '../models/Stock'
 import Company from '../entities/Company'
 import { dateToAPI, replaceAll, sleep } from '../utils/Utils'
 import { addCompanyIfNotDB } from '../services/AddCompanyIfNotInDBService'
@@ -15,6 +15,12 @@ import Quote from '../entities/Quote'
 interface LoadDataContextData {
     isLoadingData: boolean
     loadCompanies(): Promise<void>
+    loadQuotes(startDate: Date, codeStock: string): Promise<void>
+}
+
+interface LastUpdateResponse {
+    _id: string
+    lastDate: Date
 }
 
 const LoadDataContext = createContext<LoadDataContextData>({} as LoadDataContextData)
@@ -99,29 +105,37 @@ export const LoadDataProvider: React.FC = ({ children }) => {
         setLoadingData(false)
     }, [])
 
-    const loadQuotes = useCallback(async (startDate: Date) => {
+    const loadQuotes = useCallback(async (startDate: Date, codeStock: string = '') => {
         console.log('\n\nLoad Quotes:')
-        const stocks = await GetStocksDB()
+        let stocks: Stock[] = []
+        if (codeStock === '')
+            stocks = await GetStocksDB()
+        else
+            stocks.push(await GetStockByCodeDB(codeStock))
+        //
         console.log(`stocks.length: ${stocks.length}`)
+        //
+        const response = await api.get('/quotes/allLastQuotes')
+        const lastQuotesAPI = response.data as LastUpdateResponse[]
         //
         let counter = 0
         while (stocks.length > 0) {
             const stock = stocks.shift()
             if (!!stock && stock.code.length > 4 && stock.id && stock.id > 0) {
                 counter++
-                if (counter < 4) {
+                //if (counter < 4)
+                {
                     console.log('\n\n')
                     console.log(`stocks.length: ${stocks.length}`)
                     console.log(stock.code)
                     //
-                    const response = await api.get(`/quotes/${stock.code}`)
-                    if (!!response && !!response.data && !!(response.data as Quote).date) {
-                        const lastQuoteAPI = response.data as Quote
+                    const lastQuoteAPI = lastQuotesAPI.filter(lastQuote => lastQuote._id === stock.code)
+                    if (!!lastQuoteAPI && lastQuoteAPI.length > 0 && !!lastQuoteAPI[0].lastDate) {
                         const lastQuoteSQLite = await GetLastQuoteDB(stock.code)
                         const quotesSQLite = await GetQuotesByCodeDB(stock.code)
                         console.log(`quotesSQLite: ${quotesSQLite.length}`)
                         //
-                        if ((!lastQuoteSQLite || !lastQuoteSQLite.date || lastQuoteAPI.date > lastQuoteSQLite.date)) {
+                        if ((!lastQuoteSQLite || !lastQuoteSQLite.date || lastQuoteAPI[0].lastDate > lastQuoteSQLite.date)) {
                             const response = await api.get(`/quotes/${stock.code}?dateFrom=${dateToAPI(startDate)}`)
                             if (!!response && !!response.data && !!response.data[0]) {
                                 const quotesAPI = response.data as Quote[]
@@ -154,7 +168,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
 
 
     return (
-        <LoadDataContext.Provider value={{ isLoadingData, loadCompanies }} >
+        <LoadDataContext.Provider value={{ isLoadingData, loadCompanies, loadQuotes }} >
             {children}
         </LoadDataContext.Provider>
     )

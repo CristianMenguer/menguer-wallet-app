@@ -13,7 +13,7 @@ const Loading: React.FC = () => {
 
     async function loadData() {
         await loadCompanies()
-        //await loadMyPosition()
+        await loadMyPosition()
     }
 
     useEffect(() => {

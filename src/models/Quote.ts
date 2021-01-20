@@ -15,6 +15,17 @@ export const GetQuotesByCodeDB = async (code: string): Promise<Quote[]> => {
 
 }
 
+export const GetLastQuoteByCodeDB = async (code: string): Promise<Quote> => {
+
+    const response = await GetQuotesByCodeDB(code)
+
+    if (!response || !response.length || response.length == 0)
+        return {} as Quote
+    //
+    return response[0]
+
+}
+
 export const AddQuoteDB = async (props: Quote): Promise<Quote> => {
     if (!props || !props.id_stock || (!!props.id && props.id > 0))
         return props

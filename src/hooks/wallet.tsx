@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
+import { GetLastQuoteByCodeDB } from '../models/Quote'
 import { LoadOpenPositions } from '../models/Wallet'
 
 interface WalletContextData {
@@ -20,18 +21,25 @@ export const WalletProvider: React.FC = ({ children }) => {
         const myData = myDataInfo
         const wallet = myData.openPosition
         let totalInvested = 0
+        let currentBalance = 0
         while (!!wallet && !!wallet.length && wallet.length > 0)
             wallet.shift()
         //
-        if (!!positions && positions.length > 0) {
-            positions.map(position => {
+        while (!!positions && positions.length > 0) {
+            const position = positions.shift()
+            if (!!position) {
+                const quote = await GetLastQuoteByCodeDB(position.code)
+                currentBalance += (quote.close * position.quantity)
                 totalInvested += position.totalPaid
+                position.totalNow = !!(quote.close * position.quantity) ? (quote.close * position.quantity) : 0
                 wallet.push(position)
-            })
-            myData.openPosition = wallet
-            myData.totalInvested = totalInvested
+            }
         }
+        myData.openPosition = wallet
+        myData.totalInvested = totalInvested
+        myData.totalBalance = currentBalance
         //
+        console.log(myData)
         setMyDataInfo(myData)
         //
         setLoadingWallet(false)
