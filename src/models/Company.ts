@@ -6,7 +6,7 @@ const tableName = 'company'
 // This function receives the currency base, retrieves the rate from the database and returns it.
 export const LoadCompanyByCodeDB = async (code: string): Promise<Company> => {
 
-    const response = await selectDB(tableName, `code = '${code}'`) as Company[]
+    const response = await selectDB(tableName, `code LIKE '%${code}%'`) as Company[]
 
     if (!response || !response.length || response.length == 0)
         return {} as Company

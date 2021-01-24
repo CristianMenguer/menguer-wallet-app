@@ -1,6 +1,11 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
-import { GetLastQuoteByCodeDB } from '../models/Quote'
+import { createTablesDB } from '../database'
+import Quote from '../entities/Quote'
+import Watchlist from '../entities/Watchlist'
+import { GetLastQuoteByCodeDB, GetQuotesByCodeDB } from '../models/Quote'
 import { LoadOpenPositions } from '../models/Wallet'
+import { GetWatchlistsDB } from '../models/Watchlist'
+import { newDateZero } from '../utils/Utils'
 
 interface WalletContextData {
     isLoadingWallet: boolean
@@ -16,30 +21,132 @@ export const WalletProvider: React.FC = ({ children }) => {
     const [isLoadingWallet, setLoadingWallet] = useState(true)
 
     const loadMyPosition = useCallback(async () => {
+        setLoadingWallet(true)
+
         const positions = await LoadOpenPositions()
 
-        const myData = myDataInfo
-        const wallet = myData.openPosition
+        const myData = Object.assign({}, myDataInfo)
+        myData.openPosition = [] as OpenPosition[]
+        while (!!myData.openPosition && myData.openPosition.length > 0)
+            myData.openPosition.shift()
+        //
         let totalInvested = 0
         let currentBalance = 0
-        while (!!wallet && !!wallet.length && wallet.length > 0)
-            wallet.shift()
         //
         while (!!positions && positions.length > 0) {
             const position = positions.shift()
-            if (!!position) {
-                const quote = await GetLastQuoteByCodeDB(position.code)
-                currentBalance += (quote.close * position.quantity)
-                totalInvested += position.totalPaid
-                position.totalNow = !!(quote.close * position.quantity) ? (quote.close * position.quantity) : 0
-                wallet.push(position)
+            if (!!position && !!position.code && position.code.length > 0) {
+                position.totalNow = 0
+                position.totalWeek = 0
+                position.total30D = 0
+                position.totalMonth = 0
+                position.total12M = 0
+                position.totalYear = 0
+                //
+                position.resultNow = 0
+                position.resultWeek = 0
+                position.result30D = 0
+                position.resultMonth = 0
+                position.result12M = 0
+                position.resultYear = 0
+                //
+                const quotes = await GetQuotesByCodeDB(position.code)
+                const lastQuote = !!quotes && quotes.length > 0 ? quotes[0] : {} as Quote
+                if (!!lastQuote && !!lastQuote.close && lastQuote.close > 0) {
+                    currentBalance += (lastQuote.close * position.quantity)
+                    position.totalNow = !!position.quantity ? (lastQuote.close * position.quantity) : 0
+                    //
+                    const dateToFilter = newDateZero()
+                    dateToFilter.setDate(dateToFilter.getDate() - dateToFilter.getDay())
+                    let quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
+                    if (!!quotesFiltered && quotesFiltered.length > 0) {
+                        //console.log('week')
+                        //console.log(new Date(quotesFiltered[0].date))
+                        position.totalWeek = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
+                    } else {
+                        position.totalWeek = position.totalNow
+                    }
+                    //
+                    dateToFilter.setTime(newDateZero().getTime())
+                    dateToFilter.setDate(1)
+                    quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
+                    if (!!quotesFiltered && quotesFiltered.length > 0) {
+                        //console.log('month')
+                        //console.log(new Date(quotesFiltered[0].date))
+                        position.totalMonth = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
+                    } else {
+                        position.totalMonth = position.totalNow
+                    }
+                    //
+                    dateToFilter.setTime(newDateZero().getTime())
+                    dateToFilter.setDate(dateToFilter.getDate() - 30)
+                    quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
+                    if (!!quotesFiltered && quotesFiltered.length > 0) {
+                        //console.log('30D')
+                        //console.log(new Date(quotesFiltered[0].date))
+                        position.total30D = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
+                    } else {
+                        position.total30D = position.totalNow
+                    }
+                    //
+                    dateToFilter.setTime(newDateZero().getTime())
+                    dateToFilter.setDate(1)
+                    dateToFilter.setMonth(0)
+                    quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
+                    if (!!quotesFiltered && quotesFiltered.length > 0) {
+                        //console.log('year')
+                        //console.log(new Date(quotesFiltered[0].date))
+                        position.totalYear = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
+                    } else {
+                        position.totalYear = position.totalNow
+                    }
+                    //
+                    dateToFilter.setTime(newDateZero().getTime())
+                    dateToFilter.setMonth(dateToFilter.getMonth() - 12)
+                    quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
+                    if (!!quotesFiltered && quotesFiltered.length > 0) {
+                        //console.log('12M')
+                        //console.log(new Date(quotesFiltered[0].date))
+                        position.total12M = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
+                    } else {
+                        position.total12M = position.totalNow
+                    }
+                    //
+                }
+                position.resultNow = ((position.totalNow / position.totalPaid) - 1) * 100
+                position.resultWeek = ((position.totalNow / position.totalWeek) - 1) * 100
+                position.result30D = ((position.totalNow / position.total30D) - 1) * 100
+                position.resultMonth = ((position.totalNow / position.totalMonth) - 1) * 100
+                position.resultYear = ((position.totalNow / position.totalYear) - 1) * 100
+                position.result12M = ((position.totalNow / position.total12M) - 1) * 100
+                //
+                totalInvested += !!position.totalPaid ? position.totalPaid : 0
+                myData.openPosition.push(position)
             }
         }
-        myData.openPosition = wallet
+        //
+        if (myData.openPosition.length > 0)
+            myData.openPosition.map(pos => {
+                pos.percentage = pos.totalNow > 0 ? (pos.totalNow / currentBalance) * 100 : 0
+            })
+        //
         myData.totalInvested = totalInvested
         myData.totalBalance = currentBalance
+        myData.profitLossAmout = 0
+        myData.profitLossPerc = 0
         //
-        console.log(myData)
+        if (totalInvested > 0 && currentBalance > 0) {
+            myData.profitLossAmout = currentBalance - totalInvested
+            myData.profitLossPerc = ((currentBalance / totalInvested) - 1) * 100
+        }
+        //
+        myData.openPosition.sort((a, b) => (a.totalNow > b.totalNow ? -1 : 1))
+        //
+        myData.watchlist = [] as Watchlist[]
+        const watchlist = await GetWatchlistsDB()
+        watchlist.sort((a, b) => a.name > b.name ? 1 : -1)
+        watchlist.forEach(watch => myData.watchlist.push(watch))
+        //
         setMyDataInfo(myData)
         //
         setLoadingWallet(false)

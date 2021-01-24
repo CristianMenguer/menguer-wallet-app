@@ -15,6 +15,18 @@ export const GetStockByCodeDB = async (code: string): Promise<Stock> => {
 
 }
 
+// This function receives the currency base, retrieves the rate from the database and returns it.
+export const GetStockByIdDB = async (id: number): Promise<Stock> => {
+
+    const response = await selectDB(tableName, `id = ${id}`) as Stock[]
+
+    if (!response || !response.length || response.length == 0)
+        return {} as Stock
+    //
+    return response[0]
+
+}
+
 // This function receives a currency object and saves it to the database and returns the object saved
 // with the new ID.
 export const AddStockDB = async (props: Stock): Promise<Stock> => {

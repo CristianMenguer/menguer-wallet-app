@@ -5,10 +5,16 @@ interface TabButtonItemProps {
     isSelected: boolean
 }
 
+interface BoxInfoProps {
+    textColor?: string
+    textSize?: number
+}
+
 export const Container = styled.View`
     flex: 1;
     align-items: center;
     justify-content: center;
+
 `
 
 export const TitleBalance = styled.Text`
@@ -73,13 +79,21 @@ export const AddTransactionButton = styled.TouchableOpacity`
     justify-content: center;
 `
 
-
-export const BoxInfo = styled.Text`
-    margin: 4px 0;
+export const BoxInfo = styled.Text<BoxInfoProps>`
+    margin: 8px 0;
     text-align: center;
-    font-size: 18px;
+    font-size: 16px;
     color: #312e38;
-    ${text.default}
+    ${text.default};
+
+    ${props => !!props && !!props.textColor && props.textColor !== "" && css`
+        color: ${props.textColor};
+    `}
+
+    ${props => !!props && !!props.textSize && props.textSize > 0 && css`
+        font-size: ${props.textSize}px;
+    `}
+
 `
 
 export const TabButtons = styled.View`
@@ -116,4 +130,33 @@ export const TabButtonItemText = styled.Text<TabButtonItemProps>`
     ${props => props.isSelected && css`
         font-size: 12px;
     `}
+`
+
+export const ViewModal = styled.View`
+    flex: 1;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+
+`
+
+export const ModalTile = styled.View`
+    width: 100%;
+    padding: 4px 8px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+
+    background-color: #ff9000dd;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+`
+
+export const CloseModalButton = styled.TouchableOpacity`
+    width: 100%;
+    align-items: flex-end;
+    justify-content: center;
+    padding-right: 8px;
 `

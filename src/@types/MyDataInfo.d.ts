@@ -4,4 +4,5 @@ interface MyDataInfo {
     totalBalance: number
     profitLossAmout: number
     profitLossPerc: number
+    watchlist: Watchlist[]
 }

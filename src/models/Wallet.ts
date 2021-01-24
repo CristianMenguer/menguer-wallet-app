@@ -44,7 +44,7 @@ export const GetTotalWalletsDB = async (): Promise<number> => {
     return response
 }
 
-export const LoadOpenPositions = async (quantity: number = 3): Promise<OpenPosition[]> => {
+export const LoadOpenPositions = async (quantity: number = 10): Promise<OpenPosition[]> => {
 
     const response = await CustomSelectDB('select ' +
         ' sto.code, coalesce(com.name, "") as name, sum(wal.quantity) as quantity, 0 as totalNow, ' +

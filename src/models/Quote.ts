@@ -1,4 +1,4 @@
-import { selectDB, insertDB, countDB } from '../database'
+import { selectDB, insertDB, countDB, CustomSelectDB } from '../database'
 import Quote from '../entities/Quote'
 
 const tableName = 'quote'
@@ -72,5 +72,16 @@ export const GetLastQuoteDB = async (code: string): Promise<Quote> => {
         return {} as Quote
     //
     return response[0]
+
+}
+
+export const GetLastQuotesDB = async (): Promise<LastUpdateResponse[]> => {
+
+    const response = await CustomSelectDB('select quo.code_stock as _id, max(quo.date) from  quote quo group by quo.code_stock') as LastUpdateResponse[]
+    //
+    if (!response || !response.length || response.length == 0)
+        return [] as LastUpdateResponse[]
+    //
+    return response
 
 }

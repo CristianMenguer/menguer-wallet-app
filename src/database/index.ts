@@ -10,8 +10,9 @@ let APP_DB: SQLite.SQLiteDatabase
 
 // This function starts the database creating it and also all the tables if they don't exist
 const getDB = async (): Promise<SQLite.SQLiteDatabase> => {
-    if (!!APP_DB)
+    if (!!APP_DB) {
         return APP_DB
+    }
     //
     //SQLite.DEBUG(true)
     SQLite.enablePromise(true)
@@ -51,9 +52,14 @@ export const createTablesDB = async (): Promise<boolean> => {
         ' created_at real, updated_at real)')
     //
     queries.push('create table if not exists quote (' +
-        ' id integer, id_stock integer, code_stock text, open number, close number, ' +
+        ' id integer primary key, id_stock integer, code_stock text, open number, close number, ' +
         ' max number, min number, volume number, date real, dividend number, ' +
         ' coefficient number, created_at real, updated_at real)')
+    //
+    queries.push('create table if not exists watchlist (' +
+        ' id integer primary key, id_stock integer, code text, name text, created_at real, updated_at real' +
+        ')')
+    //
     while (queries.length > 0) {
         const sql = queries.shift()
         //
@@ -74,6 +80,8 @@ export const dropTablesDB = async (): Promise<boolean> => {
     queries.push('drop table if exists stock')
 
     queries.push('drop table if exists wallet')
+
+    queries.push('drop table if exists watchlist')
     //
     while (queries.length > 0) {
         const sql = queries.shift()
