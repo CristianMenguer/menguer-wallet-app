@@ -104,12 +104,15 @@ const Dashboard: React.FC = () => {
             // }
             //
             const response = await GetRecommendationsDB()
+            response.sort((a, b) => a.date > b.date ? -1 : 1)
             if (!!response && response.length > 0) {
                 const recommendations = [] as Recommendation[]
                 //response.filter(recom => recom.code_stock in myDataInfo.watchlist)
                 response.forEach(recom => {
+                    // tiet11 lupa3
                     if (recommendations.length < 10)
-                        recommendations.push(recom)
+                        if (myDataInfo.watchlist.filter((watch: Watchlist) => recom.code_stock === watch.code).length > 0)
+                            recommendations.push(recom)
                     //
                 })
                 //
@@ -120,7 +123,7 @@ const Dashboard: React.FC = () => {
 
         }
 
-        if (!isFocused)
+        if (!isFocused || !myDataInfo || !myDataInfo.watchlist || !myDataInfo.watchlist.length || myDataInfo.watchlist.length < 1)
             return
         //
         getRecommendations()
@@ -444,7 +447,7 @@ const Dashboard: React.FC = () => {
                         }} >
                             {!!myRecommendations && myRecommendations.length > 0 && (
                                 myRecommendations.map((recom: Recommendation) => (
-                                    <BoxInfo key={recom.id} >{recom.name} ({recom.code_stock})</BoxInfo>
+                                    <BoxInfo key={recom.id} >{recom.result.toUpperCase()}: {recom.name} ({recom.code_stock}) - {new Date(recom.date).getDate() + '/' + (new Date(recom.date).getMonth() + 1) + '/' + new Date(recom.date).getFullYear()}</BoxInfo>
                                 ))
                             )}
                         </View>

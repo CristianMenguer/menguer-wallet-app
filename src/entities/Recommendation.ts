@@ -6,8 +6,8 @@ class Recommendation {
     code_stock: string
     name: string
     result: string
-    created_at?: Date
-    updated_at?: Date
+    created_at: Date
+    updated_at: Date
 
     constructor(id_strategy: number, date: Date, code_stock: string, result: string, name: string, id_stock: number) {
         this.id_strategy = id_strategy

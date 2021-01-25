@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
 import api from '../services/api'
-import { GetTotalCompaniesDB } from '../models/Company'
+import { GetCompaniesDB, GetTotalCompaniesDB, LoadCompanyByCodeDB } from '../models/Company'
 import { GetStockByCodeDB, GetStockByIdDB, GetStocksDB, GetTotalStocksDB } from '../models/Stock'
 import Company from '../entities/Company'
 import { datesEqual, dateToAPI, replaceAll, sleep } from '../utils/Utils'
@@ -11,6 +11,8 @@ import { dropTablesDB, createTablesDB } from '../database'
 import { AddQuoteDB, GetLastQuoteDB, GetLastQuotesDB, GetQuotesByCodeDB } from '../models/Quote'
 import Quote from '../entities/Quote'
 import { GetWalletsDB, LoadOpenPositions } from '../models/Wallet'
+import { AddRecommendationDB, GetRecommendationsDB } from '../models/Recommendation'
+import Recommendation from '../entities/Recommendation'
 
 
 interface LoadDataContextData {
@@ -32,6 +34,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
         const createDB = false
         const refreshCompanyDB = false
         const refreshQuotesDB = false
+        const refreshRecommendationsDB = true
         //
         if (dropDB) {
             console.log('Before Drop')
@@ -110,6 +113,57 @@ export const LoadDataProvider: React.FC = ({ children }) => {
                         await loadQuotes(new Date(needQuote.dateTransaction), needQuote.stock_id)
                     }
                 }
+        }
+        //
+        if (refreshRecommendationsDB) {
+            const response = await api.get('/analysis')
+            const recommendationsAPI = response.data as AnalysisResponse[]
+            const recommendationsDB = await GetRecommendationsDB()
+            const dateFrom = new Date()
+            dateFrom.setMonth(dateFrom.getMonth() - 1)
+            //
+            let counter = 0
+            while (!!recommendationsAPI && recommendationsAPI.length > 0) {
+                const recommendationAPI = recommendationsAPI.shift()
+
+                if (!!recommendationAPI) {
+                    if (!recommendationsDB
+                        ||
+                        recommendationsDB.length < 1
+                        ||
+                        recommendationsDB.filter(recom =>
+                            recom.code_stock === recommendationAPI.code_stock &&
+                            recom.id_strategy === recommendationAPI.id_strategy &&
+                            datesEqual(new Date(recom.date), new Date(recommendationAPI.date)) &&
+                            recom.date > dateFrom
+                        ).length < 1
+                    ) {
+                        const company = await LoadCompanyByCodeDB(recommendationAPI.code_stock)
+                        const stock = await GetStockByCodeDB(recommendationAPI.code_stock)
+                        //
+                        const name = company.name
+                        const id_stock = !!stock.id && stock.id > 0 ? stock.id : 0
+                        //
+                        if (id_stock > 0 && !!recommendationAPI.date && recommendationAPI.result !== '') {
+                            const recommendationToAdd = new Recommendation(
+                                recommendationAPI.id_strategy,
+                                new Date(recommendationAPI.date),
+                                recommendationAPI.code_stock,
+                                recommendationAPI.result,
+                                name,
+                                id_stock
+                            )
+                            //
+                            //if (counter < 3)
+                            {
+                                const recommendationAdded = await AddRecommendationDB(recommendationToAdd)
+                            }
+                            counter++
+                        }
+                    }
+                }
+            }
+            //console.log(counter)
         }
         //
         setLoadingData(false)

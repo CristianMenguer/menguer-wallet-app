@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
 import { useIsFocused, useNavigation } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Feather'
 import * as Yup from 'yup'
@@ -10,7 +10,7 @@ import { FormHandles } from '@unform/core'
 
 import Input from '../../components/Input'
 
-import { Container, TitlePage, BackToDashboardButton, BackToDashboardText, Box, BoxInfo, BoxText, BoxDeleteItem } from './styles'
+import { Container, TitlePage, BackToDashboardButton, BackToDashboardText, Box, BoxInfo, BoxText, DeleteItemButton } from './styles'
 import Button from '../../components/Button'
 import { showToast } from '../../utils/ShowToast'
 import getValidationErrors from '../../utils/getValidationErros'
@@ -19,7 +19,7 @@ import { GetStockByCodeDB, } from '../../models/Stock'
 import { AddWalletDB } from '../../models/Wallet'
 import { sleep } from '../../utils/Utils'
 import useWallet from '../../hooks/wallet'
-import { AddWatchlistDB } from '../../models/Watchlist'
+import { AddWatchlistDB, RemoveWatchlistDB } from '../../models/Watchlist'
 import { GetCompaniesDB, LoadCompanyByCodeDB } from '../../models/Company'
 import { createTablesDB, execSql } from '../../database'
 
@@ -115,6 +115,39 @@ const AddWatchlist: React.FC = () => {
         }
     }, [])
 
+    const handleDeleteWatchlist = useCallback(async (data: Watchlist) => {
+        Alert.alert(
+            'Delete from Watchlist',
+            `Are you sure you want to delete ${data.name} from your watchlist?`,
+            [
+                {
+                    text: 'No',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Yes',
+                    onPress: async () => {
+                        const list: Watchlist[] = []
+                        myDataInfo.watchlist.forEach((watch: Watchlist) => {
+                            if (watch.code !== data.code) {
+                                list.push(watch)
+                            } else {
+                                RemoveWatchlistDB(watch)
+                                .then(response => {
+                                    if (response)
+                                        showToast(`${watch.name} removed from your watchlist!`)
+                                })
+                            }
+                        })
+                        //
+                        setMyList(list)
+                    }
+                }
+            ],
+            { cancelable: false }
+        )
+    }, [])
+
     return (
         <>
             <Header />
@@ -151,6 +184,11 @@ const AddWatchlist: React.FC = () => {
                             myList.map((watch: Watchlist) => (
                                 <BoxInfo key={watch.code} >
                                     <BoxText >{watch.name} - ({watch.code})</BoxText>
+                                    <DeleteItemButton
+                                        onPress={() => handleDeleteWatchlist(watch)}
+                                    >
+                                        <Icon name='trash-2' size={20} color='#312e38' />
+                                    </DeleteItemButton>
                                 </BoxInfo>
                             ))
                         )}

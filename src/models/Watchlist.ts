@@ -1,4 +1,4 @@
-import { selectDB, insertDB, countDB } from '../database'
+import { selectDB, insertDB, countDB, execSql } from '../database'
 import Watchlist from '../entities/Watchlist'
 
 const tableName = 'watchlist'
@@ -33,4 +33,19 @@ export const AddWatchlistDB = async (props: Watchlist): Promise<Watchlist> => {
     //
     return props
 
+}
+
+export const RemoveWatchlistDB = async (props: Watchlist): Promise<boolean> => {
+    if (!props || !props.id)
+        return false
+    //
+    try {
+        const response = await execSql(` delete from ${tableName} where id = ${props.id} `)
+        //
+        return true
+        //
+    } catch (err) {
+        console.log(err)
+        return false
+    }
 }

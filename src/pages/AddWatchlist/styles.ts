@@ -50,7 +50,14 @@ export const Box = styled.View`
 `
 
 export const BoxInfo = styled.View`
-    margin: 8px 0;
+    margin: 8px 0px;
+    padding: 0px 16px;
+
+    width: 100%;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 
 `
 
@@ -61,10 +68,7 @@ export const BoxText = styled.Text`
     ${text.default};
 `
 
-export const BoxDeleteItem = styled.Text`
-    margin: 8px 0;
-    text-align: center;
-    font-size: 16px;
-    color: #312e38;
-    ${text.default};
+export const DeleteItemButton = styled.TouchableOpacity`
+    align-items: center;
+    justify-content: center;
 `
