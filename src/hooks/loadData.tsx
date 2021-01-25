@@ -45,6 +45,12 @@ export const LoadDataProvider: React.FC = ({ children }) => {
             //console.log('After Create')
         }
         //
+        // try {
+        //     const response = await api.get('/companies/total')
+        // } catch (err) {
+        //     console.log(err)
+        // }
+        //
         if (refreshCompanyDB) {
             const response = await api.get('/companies/total')
             const totalCompaniesAPI = response.data

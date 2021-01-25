@@ -60,6 +60,15 @@ export const createTablesDB = async (): Promise<boolean> => {
         ' id integer primary key, id_stock integer, code text, name text, created_at real, updated_at real' +
         ')')
     //
+    queries.push('create table if not exists strategy (' +
+        ' id integer primary key, name text, description text, created_at real, updated_at real' +
+        ')')
+    //
+    queries.push('create table if not exists recommendation (' +
+        ' id integer primary key, id_stock integer, id_strategy integer, ' +
+        ' date real, code_stock text, name text, result text, created_at real, updated_at real' +
+        ')')
+    //
     while (queries.length > 0) {
         const sql = queries.shift()
         //

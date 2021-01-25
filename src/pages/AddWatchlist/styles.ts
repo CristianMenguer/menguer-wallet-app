@@ -49,11 +49,22 @@ export const Box = styled.View`
     margin-top: 32px;
 `
 
-export const BoxInfo = styled.Text`
+export const BoxInfo = styled.View`
+    margin: 8px 0;
+
+`
+
+export const BoxText = styled.Text`
+    text-align: center;
+    font-size: 16px;
+    color: #312e38;
+    ${text.default};
+`
+
+export const BoxDeleteItem = styled.Text`
     margin: 8px 0;
     text-align: center;
     font-size: 16px;
     color: #312e38;
     ${text.default};
-
 `

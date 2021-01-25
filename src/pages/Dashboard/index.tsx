@@ -16,6 +16,11 @@ import Header from '../../components/Header'
 import useWallet from '../../hooks/wallet'
 import Loader from '../../components/Loader'
 import Watchlist from '../../entities/Watchlist'
+import { GetRecommendationsDB } from '../../models/Recommendation'
+import Recommendation from '../../entities/Recommendation'
+import { createTablesDB } from '../../database'
+import { AddStrategyDB, GetStrategiesDB } from '../../models/Strategy'
+import Strategy from '../../entities/Strategy'
 
 interface PieChartData {
     code: string
@@ -43,6 +48,7 @@ const Dashboard: React.FC = () => {
     const [rankingPositiveIndex, setRankingPositiveIndex] = useState(0)
     const [rankingNegativeIndex, setRankingNegativeIndex] = useState(0)
     const [myData, setMyData] = useState({} as MyDataInfo)
+    const [myRecommendations, setMyRecommendations] = useState([] as Recommendation[])
     const [rankingPositive, setRankingPositive] = useState([] as OpenPosition[])
     const [rankingNegative, setRankingNegative] = useState([] as OpenPosition[])
     const [pieChartData, setPieChartData] = useState([] as PieChartData[])
@@ -76,6 +82,50 @@ const Dashboard: React.FC = () => {
             stroke: "#ffa726"
         }
     }
+
+    useEffect(() => {
+        async function getRecommendations() {
+            // const strategies = await GetStrategiesDB()
+            // if (!!strategies) {
+            //     if (strategies.filter(strat => strat.id === 1).length < 1) {
+            //         const strategy = new Strategy(1, 'Moving Average Crossover', 'This strategy has two moving averages, the first one of 9 days, and the second of 17 days. A recommendation is created when the shorter crosses the longer, indicating that the trend has changed.')
+            //         const response = await AddStrategyDB(strategy)
+            //         console.log(response)
+            //     } else {
+            //         console.log('has 1')
+            //     }
+            //     if (strategies.filter(strat => strat.id === 2).length < 1) {
+            //         const strategy = new Strategy(2, 'Ichimoku Cloud', 'The Ichimoku Cloud is a collection of technical indicators that show support and resistance levels, as well as momentum and trend direction.')
+            //         const response = await AddStrategyDB(strategy)
+            //         console.log(response)
+            //     } else {
+            //         console.log('has 2')
+            //     }
+            // }
+            //
+            const response = await GetRecommendationsDB()
+            if (!!response && response.length > 0) {
+                const recommendations = [] as Recommendation[]
+                //response.filter(recom => recom.code_stock in myDataInfo.watchlist)
+                response.forEach(recom => {
+                    if (recommendations.length < 10)
+                        recommendations.push(recom)
+                    //
+                })
+                //
+                setMyRecommendations(recommendations)
+            } else {
+                setMyRecommendations([] as Recommendation[])
+            }
+
+        }
+
+        if (!isFocused)
+            return
+        //
+        getRecommendations()
+        //
+    }, [isFocused, myDataInfo])
 
     useEffect(() => {
 
@@ -384,7 +434,7 @@ const Dashboard: React.FC = () => {
 
                     <Box >
                         <BoxTile >
-                            <BoxTitle>Watchlist</BoxTitle>
+                            <BoxTitle>Recommendations</BoxTitle>
                             <AddTransactionButton onPress={() => navigation.navigate('AddWatchlist')} >
                                 <Icon name='edit' size={20} color='#312e38' />
                             </AddTransactionButton>
@@ -392,9 +442,9 @@ const Dashboard: React.FC = () => {
                         <View style={{
                             minHeight: 100,
                         }} >
-                            {!!myData.watchlist && myData.watchlist.length > 0 && (
-                                myData.watchlist.map((watch: Watchlist) => (
-                                    <BoxInfo key={watch.code} >{watch.name} ({watch.code})</BoxInfo>
+                            {!!myRecommendations && myRecommendations.length > 0 && (
+                                myRecommendations.map((recom: Recommendation) => (
+                                    <BoxInfo key={recom.id} >{recom.name} ({recom.code_stock})</BoxInfo>
                                 ))
                             )}
                         </View>

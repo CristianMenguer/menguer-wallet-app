@@ -10,7 +10,7 @@ import { FormHandles } from '@unform/core'
 
 import Input from '../../components/Input'
 
-import { Container, TitlePage, BackToDashboardButton, BackToDashboardText, Box, BoxInfo } from './styles'
+import { Container, TitlePage, BackToDashboardButton, BackToDashboardText, Box, BoxInfo, BoxText, BoxDeleteItem } from './styles'
 import Button from '../../components/Button'
 import { showToast } from '../../utils/ShowToast'
 import getValidationErrors from '../../utils/getValidationErros'
@@ -44,7 +44,7 @@ const AddWatchlist: React.FC = () => {
     const [myList, setMyList] = useState<Watchlist[]>([])
 
     useEffect(() => {
-        if (!isFocused|| !myDataInfo || !myDataInfo.watchlist || !myDataInfo.watchlist.length || myDataInfo.watchlist.length < 1)
+        if (!isFocused || !myDataInfo || !myDataInfo.watchlist || !myDataInfo.watchlist.length || myDataInfo.watchlist.length < 1)
             return
         //
         const list: Watchlist[] = []
@@ -74,24 +74,25 @@ const AddWatchlist: React.FC = () => {
                 if (myList.filter(watch => watch.code === stock.code).length > 0) {
                     showToast(`${stock.code} is already in the watchlist!`)
                     return
+                } else {
+                    const company = await LoadCompanyByCodeDB(stock.code)
+                    const watchlist = new Watchlist(stock.code, stock.id, company.name)
+                    const watchlistAdded = await AddWatchlistDB(watchlist)
+                    const list: Watchlist[] = []
+                    if (!!myList && myList.length > 0)
+                        myList.forEach(watch => {
+                            list.push(watch)
+                        })
+                    //
+                    list.push(watchlistAdded)
+                    //
+                    showToast('Company added to your Watchlist!')
+                    //
+                    list.sort((a, b) => a.name > b.name ? 1 : -1)
+                    setMyList(list)
+                    //
+                    loadMyPosition()
                 }
-                //
-                const company = await LoadCompanyByCodeDB(stock.code)
-                const watchlist = new Watchlist(stock.code, stock.id, company.name)
-                const watchlistAdded = await AddWatchlistDB(watchlist)
-                const list: Watchlist[] = []
-                if (!!myList && myList.length > 0)
-                    myList.forEach(watch => {
-                        list.push(watch)
-                    })
-                //
-                list.push(watchlistAdded)
-                //
-                showToast('Company added to your Watchlist!')
-                //
-                list.sort((a, b) => a.name > b.name ? 1 : -1)
-                setMyList(list)
-                //
                 // navigation.goBack()
             } else {
                 showToast('Error. Stock code not found!')
@@ -148,7 +149,9 @@ const AddWatchlist: React.FC = () => {
                     <Box >
                         {!!myList && myList.length > 0 && (
                             myList.map((watch: Watchlist) => (
-                                <BoxInfo key={watch.code} >{watch.name} - ({watch.code})</BoxInfo>
+                                <BoxInfo key={watch.code} >
+                                    <BoxText >{watch.name} - ({watch.code})</BoxText>
+                                </BoxInfo>
                             ))
                         )}
                     </Box>
