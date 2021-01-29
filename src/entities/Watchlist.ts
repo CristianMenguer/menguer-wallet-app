@@ -1,3 +1,5 @@
+// Class Watchlist and its constructor defined here
+
 class Watchlist {
     id?: number
     id_stock: number

@@ -1,5 +1,7 @@
 import styled from 'styled-components/native'
 
+// This is the stylisation of the component Header
+
 export const Container = styled.View`
     flex-direction: row;
     justify-content: space-between;

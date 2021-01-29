@@ -1,5 +1,5 @@
-import Stock from "./Stock"
 
+// Class Quote and its constructor defined here
 class Quote {
     id?: number
     id_stock: number

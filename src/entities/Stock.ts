@@ -1,6 +1,7 @@
-import Company from "./Company"
-import Quote from "./Quote"
+import Company from './Company'
+import Quote from './Quote'
 
+// Class Stock and its constructor defined here
 class Stock {
     id?: number
     company_id: number

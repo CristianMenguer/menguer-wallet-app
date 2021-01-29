@@ -1,6 +1,7 @@
 import styled, { css } from 'styled-components/native'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 
+// This is the stylisation of the component Input
 interface ContainerProps {
     isFocused: boolean
     isErrored: boolean

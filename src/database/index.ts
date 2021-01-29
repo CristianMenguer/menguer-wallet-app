@@ -8,7 +8,7 @@ let APP_DB: SQLite.SQLiteDatabase
 // This class has all iterations that the app has with the SQLite database
 // All the functions are promises, returning error if it doesn't succeed
 
-// This function starts the database creating it and also all the tables if they don't exist
+// returns the database created, or creates it
 const getDB = async (): Promise<SQLite.SQLiteDatabase> => {
     if (!!APP_DB) {
         return APP_DB
@@ -35,6 +35,7 @@ const getDB = async (): Promise<SQLite.SQLiteDatabase> => {
 
 }
 
+// This function starts the database creating it and also all the tables if they don't exist
 export const createTablesDB = async (): Promise<boolean> => {
 
     const queries: string[] = []
@@ -220,6 +221,7 @@ export const selectByIdDB = async (tableName: string, id: number) => {
     })
 }
 
+// This function returns the quantity of rows in a specific table
 export const countDB = async (tableName: string, where: string = ''): Promise<number> => {
 
     const db = await getDB()
@@ -244,6 +246,7 @@ export const countDB = async (tableName: string, where: string = ''): Promise<nu
     })
 }
 
+// This function runs a custom select command and returns the result
 export const CustomSelectDB = async (sql: string) => {
     const db = await getDB()
 

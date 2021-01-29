@@ -21,6 +21,7 @@ import Recommendation from '../../entities/Recommendation'
 import { createTablesDB } from '../../database'
 import { AddStrategyDB, GetStrategiesDB } from '../../models/Strategy'
 import Strategy from '../../entities/Strategy'
+import { colors } from '../../constants/colors'
 
 interface PieChartData {
     code: string
@@ -47,8 +48,8 @@ const Dashboard: React.FC = () => {
     const [profitLossIndex, setProfitLossIndex] = useState(0)
     const [rankingPositiveIndex, setRankingPositiveIndex] = useState(0)
     const [rankingNegativeIndex, setRankingNegativeIndex] = useState(0)
-    const [myData, setMyData] = useState({} as MyDataInfo)
-    const [myRecommendations, setMyRecommendations] = useState([] as Recommendation[])
+    const [myRecommendationsMA, setMyRecommendationsMA] = useState([] as Recommendation[])
+    const [myRecommendationsCloud, setMyRecommendationsCloud] = useState([] as Recommendation[])
     const [rankingPositive, setRankingPositive] = useState([] as OpenPosition[])
     const [rankingNegative, setRankingNegative] = useState([] as OpenPosition[])
     const [pieChartData, setPieChartData] = useState([] as PieChartData[])
@@ -68,63 +69,60 @@ const Dashboard: React.FC = () => {
     ]
 
     const chartConfig = {
-        backgroundColor: "#F5F5F5",
-        backgroundGradientFrom: "#fb8c00",
-        backgroundGradientTo: "#ffa726",
+        backgroundColor: colors.light,
+        backgroundGradientFrom: '#fb8c00',
+        backgroundGradientTo: '#ffa726',
         color: (opacity = 1) => `rgba(49, 46, 56, ${opacity})`,
         labelColor: (opacity = 1) => `rgba(49, 46, 56, ${opacity})`,
         style: {
             borderRadius: 16
         },
         propsForDots: {
-            r: "60",
-            strokeWidth: "20",
-            stroke: "#ffa726"
+            r: '60',
+            strokeWidth: '20',
+            stroke: '#ffa726'
         }
     }
 
     useEffect(() => {
+        if (!isFocused)
+            return
+        //
+        loadMyPosition()
+    }, [isFocused, myDataInfo])
+
+    useEffect(() => {
+
         async function getRecommendations() {
-            // const strategies = await GetStrategiesDB()
-            // if (!!strategies) {
-            //     if (strategies.filter(strat => strat.id === 1).length < 1) {
-            //         const strategy = new Strategy(1, 'Moving Average Crossover', 'This strategy has two moving averages, the first one of 9 days, and the second of 17 days. A recommendation is created when the shorter crosses the longer, indicating that the trend has changed.')
-            //         const response = await AddStrategyDB(strategy)
-            //         console.log(response)
-            //     } else {
-            //         console.log('has 1')
-            //     }
-            //     if (strategies.filter(strat => strat.id === 2).length < 1) {
-            //         const strategy = new Strategy(2, 'Ichimoku Cloud', 'The Ichimoku Cloud is a collection of technical indicators that show support and resistance levels, as well as momentum and trend direction.')
-            //         const response = await AddStrategyDB(strategy)
-            //         console.log(response)
-            //     } else {
-            //         console.log('has 2')
-            //     }
-            // }
-            //
             const response = await GetRecommendationsDB()
             response.sort((a, b) => a.date > b.date ? -1 : 1)
             if (!!response && response.length > 0) {
-                const recommendations = [] as Recommendation[]
+                const recommendationsMA = [] as Recommendation[]
+                const recommendationsCloud = [] as Recommendation[]
                 //response.filter(recom => recom.code_stock in myDataInfo.watchlist)
                 response.forEach(recom => {
-                    // tiet11 lupa3
-                    if (recommendations.length < 10)
-                        if (myDataInfo.watchlist.filter((watch: Watchlist) => recom.code_stock === watch.code).length > 0)
-                            recommendations.push(recom)
-                    //
+                    if (myDataInfo.watchlist.filter((watch: Watchlist) => recom.code_stock === watch.code).length > 0) {
+                        if (recommendationsMA.length < 10 && recom.id_strategy === 1)
+                            recommendationsMA.push(recom)
+                        //
+                        if (recommendationsCloud.length < 10 && recom.id_strategy === 2)
+                            recommendationsCloud.push(recom)
+                        //
+                    }
                 })
                 //
-                setMyRecommendations(recommendations)
-            } else {
-                setMyRecommendations([] as Recommendation[])
-            }
 
+                setMyRecommendationsMA(recommendationsMA)
+                setMyRecommendationsCloud(recommendationsCloud)
+            } else {
+                setMyRecommendationsMA([] as Recommendation[])
+                setMyRecommendationsCloud([] as Recommendation[])
+            }
         }
 
-        if (!isFocused || !myDataInfo || !myDataInfo.watchlist || !myDataInfo.watchlist.length || myDataInfo.watchlist.length < 1)
+        if (!isFocused || !myDataInfo || !myDataInfo.watchlist || !myDataInfo.watchlist.length || myDataInfo.watchlist.length < 1) {
             return
+        }
         //
         getRecommendations()
         //
@@ -135,7 +133,7 @@ const Dashboard: React.FC = () => {
         if (!isFocused)
             return
         //
-        if (!myDataInfo || !myDataInfo.openPosition || !myDataInfo.openPosition.length || myDataInfo.openPosition.length < 1)
+        if (!myDataInfo || !myDataInfo.openPosition)
             return
         //
         const rankingP = [] as OpenPosition[]
@@ -177,15 +175,13 @@ const Dashboard: React.FC = () => {
         //
         setRankingNegative(rankingN)
         //
-        setMyData(myDataInfo)
-        //
     }, [isFocused, myDataInfo])
 
     useEffect(() => {
-        if (!isFocused || !myData || !myData.openPosition || myData.openPosition.length < 1)
+        if (!isFocused || !myDataInfo || !myDataInfo.openPosition || myDataInfo.openPosition.length < 1)
             return
         //
-        const myDataTemp = Object.assign({}, myData)
+        const myDataTemp = Object.assign({}, myDataInfo)
         let totalInvested = 0
         //
         if (profitLossIndex === 1) {
@@ -222,8 +218,6 @@ const Dashboard: React.FC = () => {
         //
         myDataTemp.profitLossAmout = myDataTemp.totalBalance - totalInvested
         myDataTemp.profitLossPerc = ((myDataTemp.totalBalance / totalInvested) - 1) * 100
-        //
-        setMyData(myDataTemp)
         //
     }, [isFocused, profitLossIndex])
 
@@ -291,7 +285,7 @@ const Dashboard: React.FC = () => {
 
     }, [isFocused, rankingNegativeIndex])
 
-    if (!myData || !myData.totalBalance)
+    if (!myDataInfo)
         return <Loader message='Loading Dashboard' />
 
     return (
@@ -310,7 +304,7 @@ const Dashboard: React.FC = () => {
                     }}
                 >
 
-                    <TitleBalance>Total Balance: R$ {myData.totalBalance.toFixed(2)}</TitleBalance>
+                    <TitleBalance>Total Balance: R$ {!!myDataInfo.totalBalance ? myDataInfo.totalBalance.toFixed(2) : '0.00'}</TitleBalance>
 
                     <BoxTouch onPress={() => {
                         setModalWalletVisible(true)
@@ -318,11 +312,11 @@ const Dashboard: React.FC = () => {
                         <BoxTile >
                             <BoxTitle>My Wallet</BoxTitle>
                             <AddTransactionButton onPress={() => navigation.navigate('AddTransaction')} >
-                                <Icon name='plus-circle' size={20} color='#312e38' />
+                                <Icon name='plus-circle' size={20} color={colors.dark} />
                             </AddTransactionButton>
                         </BoxTile>
-                        {!!myData.openPosition && myData.openPosition.length > 0 && (
-                            myData.openPosition.map(position => (
+                        {!!myDataInfo.openPosition && myDataInfo.openPosition.length > 0 && (
+                            myDataInfo.openPosition.map(position => (
                                 <BoxInfo key={position.code} >{position.name} ({position.percentage.toFixed(2)}%)</BoxInfo>
                             ))
                         )}
@@ -352,8 +346,8 @@ const Dashboard: React.FC = () => {
                                 </TabButtonItem>
                             </TabButtons>
                         </BoxTile>
-                        <BoxInfo textSize={20} >{!!myData.profitLossPerc ? myData.profitLossPerc.toFixed(2) : 0}%</BoxInfo>
-                        <BoxInfo textSize={20} >R$ {!!myData.profitLossAmout ? myData.profitLossAmout.toFixed(2) : 0}</BoxInfo>
+                        <BoxInfo textSize={20} >{!!myDataInfo.profitLossPerc ? myDataInfo.profitLossPerc.toFixed(2) : 0}%</BoxInfo>
+                        <BoxInfo textSize={20} >R$ {!!myDataInfo.profitLossAmout ? myDataInfo.profitLossAmout.toFixed(2) : 0}</BoxInfo>
                     </Box>
 
                     <BoxTouch onPress={() => {
@@ -439,17 +433,31 @@ const Dashboard: React.FC = () => {
                         <BoxTile >
                             <BoxTitle>Recommendations</BoxTitle>
                             <AddTransactionButton onPress={() => navigation.navigate('AddWatchlist')} >
-                                <Icon name='edit' size={20} color='#312e38' />
+                                <Icon name='edit' size={20} color={colors.dark} />
                             </AddTransactionButton>
                         </BoxTile>
                         <View style={{
                             minHeight: 100,
                         }} >
-                            {!!myRecommendations && myRecommendations.length > 0 && (
-                                myRecommendations.map((recom: Recommendation) => (
-                                    <BoxInfo key={recom.id} >{recom.result.toUpperCase()}: {recom.name} ({recom.code_stock}) - {new Date(recom.date).getDate() + '/' + (new Date(recom.date).getMonth() + 1) + '/' + new Date(recom.date).getFullYear()}</BoxInfo>
-                                ))
+                            {!!myRecommendationsMA && myRecommendationsMA.length > 0 && (
+                                <>
+                                    <BoxInfo >Moving Average</BoxInfo>
+                                    {myRecommendationsMA.map((recom: Recommendation) => (
+                                        <BoxInfo key={recom.id} >{recom.result.toUpperCase()}: {recom.name} ({recom.code_stock}) - {new Date(recom.date).getDate() + '/' + (new Date(recom.date).getMonth() + 1) + '/' + new Date(recom.date).getFullYear()}</BoxInfo>
+                                    ))}
+                                    <View style={{ height: 16, }} />
+                                </>
                             )}
+
+                            {!!myRecommendationsCloud && myRecommendationsCloud.length > 0 && (
+                                (
+                                    <>
+                                        <BoxInfo >Ichimoku Clouds</BoxInfo>
+                                        {myRecommendationsCloud.map((recom: Recommendation) => (
+                                            <BoxInfo key={recom.id} >{recom.result.toUpperCase()}: {recom.name} ({recom.code_stock}) - {new Date(recom.date).getDate() + '/' + (new Date(recom.date).getMonth() + 1) + '/' + new Date(recom.date).getFullYear()}</BoxInfo>
+                                        ))}
+                                    </>
+                                ))}
                         </View>
                     </Box>
 
@@ -469,7 +477,7 @@ const Dashboard: React.FC = () => {
                     marginTop: 200,
                     borderRadius: 20,
                     borderWidth: 2,
-                    borderColor: '#ff9000',
+                    borderColor: colors.orange,
 
                 }}
                 onBackButtonPress={() => setModalWalletVisible(false)}
@@ -484,7 +492,7 @@ const Dashboard: React.FC = () => {
             >
                 <ModalTile >
                     <CloseModalButton onPress={() => setModalWalletVisible(false)} >
-                        <Icon name='x-circle' size={20} color='#312e38' />
+                        <Icon name='x-circle' size={20} color={colors.dark} />
                     </CloseModalButton>
                 </ModalTile>
 
@@ -519,7 +527,7 @@ const Dashboard: React.FC = () => {
                     marginTop: 200,
                     borderRadius: 20,
                     borderWidth: 2,
-                    borderColor: '#ff9000',
+                    borderColor: colors.orange,
 
                 }}
                 onBackButtonPress={() => setModalRankingPVisible(false)}
@@ -534,7 +542,7 @@ const Dashboard: React.FC = () => {
             >
                 <ModalTile >
                     <CloseModalButton onPress={() => setModalRankingPVisible(false)} >
-                        <Icon name='x-circle' size={20} color='#312e38' />
+                        <Icon name='x-circle' size={20} color={colors.dark} />
                     </CloseModalButton>
                 </ModalTile>
 
@@ -592,7 +600,7 @@ const Dashboard: React.FC = () => {
                     marginTop: 200,
                     borderRadius: 20,
                     borderWidth: 2,
-                    borderColor: '#ff9000',
+                    borderColor: colors.orange,
 
                 }}
                 onBackButtonPress={() => setModalRankingNVisible(false)}
@@ -607,7 +615,7 @@ const Dashboard: React.FC = () => {
             >
                 <ModalTile >
                     <CloseModalButton onPress={() => setModalRankingNVisible(false)} >
-                        <Icon name='x-circle' size={20} color='#312e38' />
+                        <Icon name='x-circle' size={20} color={colors.dark} />
                     </CloseModalButton>
                 </ModalTile>
 

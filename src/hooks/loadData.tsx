@@ -1,4 +1,6 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
+import NetInfo from "@react-native-community/netinfo"
+
 import api from '../services/api'
 import { GetCompaniesDB, GetTotalCompaniesDB, LoadCompanyByCodeDB } from '../models/Company'
 import { GetStockByCodeDB, GetStockByIdDB, GetStocksDB, GetTotalStocksDB } from '../models/Stock'
@@ -21,40 +23,47 @@ interface LoadDataContextData {
     loadQuotes(startDate: Date, stock_id: number): Promise<void>
 }
 
+// creates the context of loadData
 const LoadDataContext = createContext<LoadDataContextData>({} as LoadDataContextData)
 
 export const LoadDataProvider: React.FC = ({ children }) => {
 
+    // this "variable" is available everywhere in the application
+    // it is "global"
     const [isLoadingData, setLoadingData] = useState(true)
 
+    /**
+     * This function loads everything that is needed from the API.
+     */
+
     const loadCompanies = useCallback(async () => {
+
+        // First it needs to be sure that there is internet connection
+        const network = await NetInfo.fetch()
+        const hasConnection = !!network && network.isInternetReachable
+
+        console.log('Starting loadCompanies()')
         setLoadingData(true)
         //
         const dropDB = false
-        const createDB = false
-        const refreshCompanyDB = false
-        const refreshQuotesDB = false
+        const createDB = true
+        const refreshCompanyDB = true
+        const refreshQuotesDB = true
         const refreshRecommendationsDB = true
         //
-        if (dropDB) {
-            console.log('Before Drop')
+        if (dropDB)
             await dropTablesDB()
-            console.log('After Drop')
-        }
         //
-        if (createDB) {
-            //console.log('Before Create')
+        // It tries to create the tables, if they do not exist
+        if (createDB)
             await createTablesDB()
-            //console.log('After Create')
-        }
         //
-        // try {
-        //     const response = await api.get('/companies/total')
-        // } catch (err) {
-        //     console.log(err)
-        // }
-        //
-        if (refreshCompanyDB) {
+        if (refreshCompanyDB && hasConnection) {
+            /**
+             * Get from the API the total number of companies. If this number is
+             * greater than the quantity in the application database, it will fetch
+             * all the companies from the API and save the ones not present in the Database
+             */
             const response = await api.get('/companies/total')
             const totalCompaniesAPI = response.data
             const totalCompaniesSQLite = await GetTotalCompaniesDB()
@@ -80,6 +89,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
                         const companyAdded = await addCompanyIfNotDB(newCompany)
                         console.log(`Company added: ${companyAdded.id} - ${companyAdded.code}`)
                         //
+                        // The stock codes from the companies are saved in the Stock Table, if they do not exist
                         const codes: string[] = replaceAll(companyAPI.code, ' ', '').split(',')
                         while (codes.length > 0) {
                             const code = codes.shift()
@@ -104,7 +114,9 @@ export const LoadDataProvider: React.FC = ({ children }) => {
             console.log(`DB ==> total companies: ${companiesSQLite} ==> total stocks: ${stocksSQLite}`)
         }
 
-        if (refreshQuotesDB) {
+        // All the stocks that the user has added a transaction will have their Quotes
+        // retrieved from the Database to make the calculations
+        if (refreshQuotesDB && hasConnection) {
             const needQuotes = await GetWalletsDB()
             if (!!needQuotes)
                 while (needQuotes.length > 0) {
@@ -115,7 +127,8 @@ export const LoadDataProvider: React.FC = ({ children }) => {
                 }
         }
         //
-        if (refreshRecommendationsDB) {
+        // Recommendations from the past Month are fetched from API
+        if (refreshRecommendationsDB && hasConnection) {
             const response = await api.get('/analysis')
             const recommendationsAPI = response.data as AnalysisResponse[]
             const recommendationsDB = await GetRecommendationsDB()
@@ -170,17 +183,18 @@ export const LoadDataProvider: React.FC = ({ children }) => {
         console.log('Finish LoadCompanies')
     }, [])
 
+    /**
+     * This function will receive a start date and the stock ID.
+     * It will get all the quotes from the API to the specific stock
+     * from the start date
+     */
     const loadQuotes = useCallback(async (startDate: Date, stock_id: number = 0) => {
         //
         if (stock_id < 1)
             return
         //
-        console.log('\n\n')
-        console.log(`Load Quote (${stock_id})`)
         let stocks: Stock[] = []
         if (stock_id > 0)
-            //     stocks = await GetStocksDB()
-            // else
             stocks.push(await GetStockByIdDB(stock_id))
         //
         if (stocks.length < 1)
@@ -188,46 +202,37 @@ export const LoadDataProvider: React.FC = ({ children }) => {
         //
         const response = await api.get('/quotes/allLastQuotes')
         const lastQuotesAPI = response.data as LastUpdateResponse[]
-        //const lastQuotesSQLite = await GetLastQuotesDB()
         //
         let counter = 0
-        //while (stocks.length > 0)
-        {
-            //const stock = stocks.shift()
-            const stock = stocks[0]
-            if (!!stock && stock.code.length > 4 && stock.id && stock.id > 0) {
-                counter++
-                //if (counter < 4)
-                {
-                    //console.log(`stocks.length: ${stocks.length}`)
-                    console.log(stock.code)
+        const stock = stocks[0]
+        if (!!stock && stock.code.length > 4 && stock.id && stock.id > 0) {
+            counter++
+            console.log(stock.code)
+            //
+            const lastQuoteAPI = lastQuotesAPI.filter(lastQuote => lastQuote._id === stock.code)
+            if (!!lastQuoteAPI && lastQuoteAPI.length > 0 && !!lastQuoteAPI[0].lastDate) {
+                //
+                const response = await api.get(`/quotes/${stock.code}?dateFrom=${dateToAPI(startDate)}`)
+                if (!!response && !!response.data && !!response.data[0]) {
                     //
-                    const lastQuoteAPI = lastQuotesAPI.filter(lastQuote => lastQuote._id === stock.code)
-                    if (!!lastQuoteAPI && lastQuoteAPI.length > 0 && !!lastQuoteAPI[0].lastDate) {
+                    const quotesSQLite = await GetQuotesByCodeDB(stock.code)
+                    //
+                    const quotesAPI = response.data as Quote[]
+                    let counterAdded = 0
+                    while (quotesAPI.length > 0) {
+                        const quoteAPI = quotesAPI.shift()
                         //
-                        const response = await api.get(`/quotes/${stock.code}?dateFrom=${dateToAPI(startDate)}`)
-                        if (!!response && !!response.data && !!response.data[0]) {
+                        if (!!quoteAPI && (quotesSQLite.filter(quote => datesEqual(new Date(quote.date), new Date(quoteAPI.date))).length < 1)) {
                             //
-                            const quotesSQLite = await GetQuotesByCodeDB(stock.code)
+                            const quoteToBeAdded = new Quote(stock.id, stock.code, quoteAPI.open, quoteAPI.close,
+                                quoteAPI.max, quoteAPI.min, quoteAPI.volume, new Date(quoteAPI.date), quoteAPI.dividend,
+                                quoteAPI.coefficient)
                             //
-                            const quotesAPI = response.data as Quote[]
-                            let counterAdded = 0
-                            while (quotesAPI.length > 0) {
-                                const quoteAPI = quotesAPI.shift()
-                                //
-                                if (!!quoteAPI && (quotesSQLite.filter(quote => datesEqual(new Date(quote.date), new Date(quoteAPI.date))).length < 1)) {
-                                    //
-                                    const quoteToBeAdded = new Quote(stock.id, stock.code, quoteAPI.open, quoteAPI.close,
-                                        quoteAPI.max, quoteAPI.min, quoteAPI.volume, new Date(quoteAPI.date), quoteAPI.dividend,
-                                        quoteAPI.coefficient)
-                                    //
-                                    const quoteAdded = await AddQuoteDB(quoteToBeAdded)
-                                    counterAdded++
-                                }
-                            }
-                            console.log(`Quotes Added: ${counterAdded}`)
+                            const quoteAdded = await AddQuoteDB(quoteToBeAdded)
+                            counterAdded++
                         }
                     }
+                    console.log(`Quotes Added: ${counterAdded}`)
                 }
             }
         }
@@ -236,6 +241,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
     }, [])
 
 
+    // returns the provider
     return (
         <LoadDataContext.Provider value={{ isLoadingData, loadCompanies, loadQuotes }} >
             {children}

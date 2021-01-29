@@ -8,6 +8,13 @@ import useLoadData from '../hooks/loadData'
 import Loading from '../pages/Loading'
 import useWallet from '../hooks/wallet'
 
+/**
+ * This is the main file that handles the routes (pages).
+ * If the user is authenticated, it calls the Loading Page
+ * that will load all necessary data and then
+ * send the user to the Dashboard.
+ */
+
 const Routes: React.FC = () => {
 
     const { user } = useAuth()
@@ -20,12 +27,11 @@ const Routes: React.FC = () => {
         setIsLoading(isLoadingData && isLoadingWallet)
     }, [isLoadingData, isLoadingWallet])
 
-    if (isLoading)
+    if (!!user && isLoading)
         return <Loading />
     //
     return (!!user ? <AppRoutes /> : <AuthRoutes />)
 
-    // return <AppRoutes />
 }
 
 export default Routes

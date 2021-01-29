@@ -3,7 +3,7 @@ import Company from '../entities/Company'
 
 const tableName = 'company'
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function receives a stock code and returns the Company found.
 export const LoadCompanyByCodeDB = async (code: string): Promise<Company> => {
 
     const response = await selectDB(tableName, `code LIKE '%${code}%'`) as Company[]
@@ -15,6 +15,7 @@ export const LoadCompanyByCodeDB = async (code: string): Promise<Company> => {
 
 }
 
+// This function returns all the Company Objects from the Database
 export const GetCompaniesDB = async (): Promise<Company[]> => {
 
     const response = await selectDB(tableName)
@@ -26,7 +27,7 @@ export const GetCompaniesDB = async (): Promise<Company[]> => {
 
 }
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns the quantity os Company rows in the Database
 export const GetTotalCompaniesDB = async (): Promise<number> => {
 
     const response = await countDB(tableName) as number
@@ -36,7 +37,7 @@ export const GetTotalCompaniesDB = async (): Promise<number> => {
 
 }
 
-// This function receives a currency object and saves it to the database and returns the object saved
+// This function receives a Company object and saves it to the database and returns the object saved
 // with the new ID.
 export const AddCompanyDB = async (props: Company): Promise<Company> => {
     if (!props || !props.id_api)

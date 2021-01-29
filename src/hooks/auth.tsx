@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useState, useContext, useEffect } fr
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
 
+// Interfaces used in the authentication process
 interface AuthState {
     token: string
     user: object
@@ -15,17 +16,22 @@ interface SignInCredential {
 interface AuthContextData {
     user: object
     signIn(credential: SignInCredential): Promise<void>
-    signOut(): void
+    signOut(): Promise<void>
     isLoadingAuth: boolean
 }
 
+// creates the context of authentication
 const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 
 export const AuthProvider: React.FC = ({ children }) => {
 
+    // these "variables" are available everywhere in the application
+    // they are "global"
     const [data, setData] = useState<AuthState>({} as AuthState)
     const [isLoadingAuth, setLoadingAuth] = useState(true)
 
+    // when first run, it tries to retrieve the data from local storage
+    // it will found it the user is already signed in
     useEffect(() => {
         async function loadAsyncStorage() {
             const [token, user] = await AsyncStorage.multiGet([
@@ -49,6 +55,9 @@ export const AuthProvider: React.FC = ({ children }) => {
 
     }, [])
 
+    // receives the e-mail and password typed by the user and tries to
+    // start a session in the API, getting a token
+    // It also saves to the local storage
     const signIn = useCallback(async ({ email, password }) => {
 
         const response = await api.post('session', {
@@ -69,6 +78,7 @@ export const AuthProvider: React.FC = ({ children }) => {
 
     }, [])
 
+    // removes the user data from local storage and sign out
     const signOut = useCallback(async () => {
 
         await AsyncStorage.multiRemove([
@@ -80,6 +90,7 @@ export const AuthProvider: React.FC = ({ children }) => {
 
     }, [])
 
+    // returns the provider
     return (
         <AuthContext.Provider value={{ user: data.user, signIn, signOut, isLoadingAuth }} >
             {children}

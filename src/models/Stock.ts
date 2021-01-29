@@ -3,7 +3,7 @@ import Stock from '../entities/Stock'
 
 const tableName = 'stock'
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function receives a stock code and returns the Stock found.
 export const GetStockByCodeDB = async (code: string): Promise<Stock> => {
 
     const response = await selectDB(tableName, `code = '${code}'`) as Stock[]
@@ -15,7 +15,7 @@ export const GetStockByCodeDB = async (code: string): Promise<Stock> => {
 
 }
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function receives an ID and returns its Object.
 export const GetStockByIdDB = async (id: number): Promise<Stock> => {
 
     const response = await selectDB(tableName, `id = ${id}`) as Stock[]
@@ -27,8 +27,7 @@ export const GetStockByIdDB = async (id: number): Promise<Stock> => {
 
 }
 
-// This function receives a currency object and saves it to the database and returns the object saved
-// with the new ID.
+// This function receives a Stock object and insert it to the Database
 export const AddStockDB = async (props: Stock): Promise<Stock> => {
     if (!props || !props.company_id)
         return props
@@ -47,7 +46,7 @@ export const AddStockDB = async (props: Stock): Promise<Stock> => {
 
 }
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns the quantity os Stock rows in the Database
 export const GetTotalStocksDB = async (): Promise<number> => {
 
     const response = await countDB(tableName, ``) as number
@@ -57,7 +56,7 @@ export const GetTotalStocksDB = async (): Promise<number> => {
 
 }
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns all the Stock Objects from the Database
 export const GetStocksDB = async (): Promise<Stock[]> => {
 
     const response = await selectDB(tableName) as Stock[]

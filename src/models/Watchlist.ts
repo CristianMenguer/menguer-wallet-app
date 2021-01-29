@@ -3,19 +3,19 @@ import Watchlist from '../entities/Watchlist'
 
 const tableName = 'watchlist'
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns all the Watchlist Objects from the Database
 export const GetWatchlistsDB = async (): Promise<Watchlist[]> => {
 
     const response = await selectDB(tableName) as Watchlist[]
     //
-    if (!response || !response.length || response.length == 0)
+    if (!response || !response.length || response.length === 0)
         return [] as Watchlist[]
     //
     return response
 
 }
 
-// This function receives a currency object and saves it to the database and returns the object saved
+// This function receives a Watchlist object and saves it to the database and returns the object saved
 // with the new ID.
 export const AddWatchlistDB = async (props: Watchlist): Promise<Watchlist> => {
     if (!props)
@@ -35,12 +35,15 @@ export const AddWatchlistDB = async (props: Watchlist): Promise<Watchlist> => {
 
 }
 
+//This function receives a Watchlist object and deletes it from the Database
 export const RemoveWatchlistDB = async (props: Watchlist): Promise<boolean> => {
+    console.log(props)
     if (!props || !props.id)
         return false
     //
     try {
         const response = await execSql(` delete from ${tableName} where id = ${props.id} `)
+        console.log(response)
         //
         return true
         //

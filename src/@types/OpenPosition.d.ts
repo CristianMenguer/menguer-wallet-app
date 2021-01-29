@@ -1,3 +1,5 @@
+//Interface used in the whole app to the objects of open positions
+
 interface OpenPosition {
     code: string
     name: string

@@ -3,7 +3,7 @@ import Quote from '../entities/Quote'
 
 const tableName = 'quote'
 
-
+// This function receives a stock code and returns the Quotes found.
 export const GetQuotesByCodeDB = async (code: string): Promise<Quote[]> => {
 
     const response = await selectDB(tableName, `code_stock = '${code}' order by date DESC`) as Quote[]
@@ -15,6 +15,7 @@ export const GetQuotesByCodeDB = async (code: string): Promise<Quote[]> => {
 
 }
 
+// This function receives a stock code and returns the last Quote found.
 export const GetLastQuoteByCodeDB = async (code: string): Promise<Quote> => {
 
     const response = await GetQuotesByCodeDB(code)
@@ -26,6 +27,7 @@ export const GetLastQuoteByCodeDB = async (code: string): Promise<Quote> => {
 
 }
 
+// This function receives a Quote object and insert it to the Database
 export const AddQuoteDB = async (props: Quote): Promise<Quote> => {
     if (!props || !props.id_stock || (!!props.id && props.id > 0))
         return props
@@ -46,24 +48,7 @@ export const AddQuoteDB = async (props: Quote): Promise<Quote> => {
 
 }
 
-export const GetTotalQuotesDB = async (): Promise<number> => {
-
-    const response = await countDB(tableName) as number
-    //
-    return response
-}
-
-export const GetQuotesDB = async (): Promise<Quote[]> => {
-
-    const response = await selectDB(tableName) as Quote[]
-    //
-    if (!response || !response.length || response.length == 0)
-        return [] as Quote[]
-    //
-    return response
-
-}
-
+// This function receives a stock code and returns the last Quote found.
 export const GetLastQuoteDB = async (code: string): Promise<Quote> => {
 
     const response = await selectDB(tableName, `code_stock = '${code}' ORDER BY date DESC LIMIT 1`) as Quote[]
@@ -75,6 +60,7 @@ export const GetLastQuoteDB = async (code: string): Promise<Quote> => {
 
 }
 
+// This function returns the last Quote for each code Stock.
 export const GetLastQuotesDB = async (): Promise<LastUpdateResponse[]> => {
 
     const response = await CustomSelectDB('select quo.code_stock as _id, max(quo.date) from  quote quo group by quo.code_stock') as LastUpdateResponse[]

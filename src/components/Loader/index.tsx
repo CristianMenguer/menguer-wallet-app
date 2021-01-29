@@ -5,6 +5,7 @@ import { Container, Message } from './styles'
 
 import logoImg from '../../assets/logo.png'
 import { useEffect } from 'react'
+import { colors } from '../../constants/colors'
 
 // Interface used to declare the props coming from the call
 interface LoaderProps {
@@ -38,7 +39,7 @@ const Loader: React.FC<LoaderProps> = ({ message }) => {
     return (
         <Container >
             <Image source={logoImg} />
-            <ActivityIndicator size='large' color='#ff9000' style={{ marginTop: 16 }} />
+            <ActivityIndicator size='large' color={colors.orange} style={{ marginTop: 16 }} />
             <Message >{loadingMessage}</Message>
         </Container >
     )

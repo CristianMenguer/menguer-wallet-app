@@ -10,19 +10,40 @@ import { newDateZero } from '../utils/Utils'
 interface WalletContextData {
     isLoadingWallet: boolean
     loadMyPosition(): Promise<MyDataInfo>
+    reloadWatchlist(): Promise<Watchlist[]>
     myDataInfo: MyDataInfo
 }
 
+// creates the context of Wallet
 const WalletContext = createContext<WalletContextData>({} as WalletContextData)
 
 export const WalletProvider: React.FC = ({ children }) => {
 
+    // these "variables" are available everywhere in the application
+    // they are "global"
     const [myDataInfo, setMyDataInfo] = useState<MyDataInfo>({} as MyDataInfo)
     const [isLoadingWallet, setLoadingWallet] = useState(true)
 
+    // this function updates only the watchlist of myDataInfo
+    const reloadWatchlist = useCallback(async () => {
+        const myData = Object.assign({}, myDataInfo)
+        myData.watchlist = [] as Watchlist[]
+        const watchlist = await GetWatchlistsDB()
+        watchlist.sort((a, b) => a.name > b.name ? 1 : -1)
+        watchlist.forEach(watch => myData.watchlist.push(watch))
+        //
+        console.log(myData)
+        setMyDataInfo(myData)
+        //
+        return watchlist
+    }, [])
+
+    // this function will load the user position from the Database
     const loadMyPosition = useCallback(async () => {
         setLoadingWallet(true)
 
+        // it first loads the open positions of the user from the Database,
+        // based on the transactions
         const positions = await LoadOpenPositions()
 
         const myData = Object.assign({}, myDataInfo)
@@ -30,6 +51,8 @@ export const WalletProvider: React.FC = ({ children }) => {
         while (!!myData.openPosition && myData.openPosition.length > 0)
             myData.openPosition.shift()
         //
+        // From here all the possible filters in the Dashboard are calculated
+        // It is explained in the final report
         let totalInvested = 0
         let currentBalance = 0
         //
@@ -60,8 +83,6 @@ export const WalletProvider: React.FC = ({ children }) => {
                     dateToFilter.setDate(dateToFilter.getDate() - dateToFilter.getDay())
                     let quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
                     if (!!quotesFiltered && quotesFiltered.length > 0) {
-                        //console.log('week')
-                        //console.log(new Date(quotesFiltered[0].date))
                         position.totalWeek = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
                     } else {
                         position.totalWeek = position.totalNow
@@ -71,8 +92,6 @@ export const WalletProvider: React.FC = ({ children }) => {
                     dateToFilter.setDate(1)
                     quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
                     if (!!quotesFiltered && quotesFiltered.length > 0) {
-                        //console.log('month')
-                        //console.log(new Date(quotesFiltered[0].date))
                         position.totalMonth = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
                     } else {
                         position.totalMonth = position.totalNow
@@ -82,8 +101,6 @@ export const WalletProvider: React.FC = ({ children }) => {
                     dateToFilter.setDate(dateToFilter.getDate() - 30)
                     quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
                     if (!!quotesFiltered && quotesFiltered.length > 0) {
-                        //console.log('30D')
-                        //console.log(new Date(quotesFiltered[0].date))
                         position.total30D = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
                     } else {
                         position.total30D = position.totalNow
@@ -94,8 +111,6 @@ export const WalletProvider: React.FC = ({ children }) => {
                     dateToFilter.setMonth(0)
                     quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
                     if (!!quotesFiltered && quotesFiltered.length > 0) {
-                        //console.log('year')
-                        //console.log(new Date(quotesFiltered[0].date))
                         position.totalYear = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
                     } else {
                         position.totalYear = position.totalNow
@@ -105,8 +120,6 @@ export const WalletProvider: React.FC = ({ children }) => {
                     dateToFilter.setMonth(dateToFilter.getMonth() - 12)
                     quotesFiltered = quotes.filter(quo => quo.date < dateToFilter)
                     if (!!quotesFiltered && quotesFiltered.length > 0) {
-                        //console.log('12M')
-                        //console.log(new Date(quotesFiltered[0].date))
                         position.total12M = !!position.quantity ? (quotesFiltered[0].close * position.quantity) : 0
                     } else {
                         position.total12M = position.totalNow
@@ -156,8 +169,9 @@ export const WalletProvider: React.FC = ({ children }) => {
 
 
 
+    // returns the provider
     return (
-        <WalletContext.Provider value={{ isLoadingWallet, loadMyPosition, myDataInfo }} >
+        <WalletContext.Provider value={{ isLoadingWallet, loadMyPosition, reloadWatchlist, myDataInfo }} >
             {children}
         </WalletContext.Provider>
     )

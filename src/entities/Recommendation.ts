@@ -1,3 +1,5 @@
+// Class Recommendation and its constructor defined here
+
 class Recommendation {
     id?: number
     id_strategy: number

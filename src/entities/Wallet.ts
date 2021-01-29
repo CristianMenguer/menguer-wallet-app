@@ -1,4 +1,4 @@
-import Stock from "./Stock"
+// Class Wallet and its constructor defined here
 
 class Wallet {
     id?: number

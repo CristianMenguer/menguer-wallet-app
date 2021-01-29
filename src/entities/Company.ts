@@ -1,3 +1,4 @@
+// Class Company and its constructor defined here
 class Company {
     id?: number
     id_api: number

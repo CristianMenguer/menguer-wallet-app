@@ -1,3 +1,4 @@
+//Interface used in the whole app to the Response of the API for companies
 interface CompanyResponse {
     _id: string
     code: string

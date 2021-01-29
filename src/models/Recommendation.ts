@@ -3,7 +3,7 @@ import Recommendation from '../entities/Recommendation'
 
 const tableName = 'recommendation'
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns all the Recommendation Objects from the Database
 export const GetRecommendationsDB = async (): Promise<Recommendation[]> => {
 
     const response = await selectDB(tableName) as Recommendation[]
@@ -14,6 +14,7 @@ export const GetRecommendationsDB = async (): Promise<Recommendation[]> => {
     return response
 }
 
+// This function receives a Recommendation object and insert it to the Database
 export const AddRecommendationDB = async (props: Recommendation): Promise<Recommendation> => {
     if (!props || !props.result)
         return props

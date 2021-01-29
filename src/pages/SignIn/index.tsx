@@ -17,6 +17,9 @@ import logoImg from '../../assets/logo.png'
 
 import { Container, Title, ForgotPasswordButton, ForgotPasswordText, CreateAccountButton, CreateAccountText } from './styles'
 import { showToast } from '../../utils/ShowToast'
+import { AxiosError } from 'axios'
+import { dropTablesDB, createTablesDB } from '../../database'
+import { colors } from '../../constants/colors'
 
 interface SignInFormData {
     email: string
@@ -54,6 +57,9 @@ const SignIn: React.FC = () => {
                 password
             })
 
+            await dropTablesDB()
+            await createTablesDB()
+
             // history.push('/dashboard')
 
         } catch (err) {
@@ -68,6 +74,12 @@ const SignIn: React.FC = () => {
                 //
                 return
             }
+
+            if (!!err.response?.data?.message) {
+                showToast(err.response.data.message)
+                return
+            }
+
 
             Alert.alert('Authentication error', 'Please, try again!')
 
@@ -117,10 +129,6 @@ const SignIn: React.FC = () => {
                             <Button onPress={() => formRef.current?.submitForm()} >Log In</Button>
                         </Form>
 
-                        <ForgotPasswordButton onPress={() => { alert('forgot') }} >
-                            <ForgotPasswordText>Forgot Password</ForgotPasswordText>
-                        </ForgotPasswordButton>
-
 
 
                     </Container>
@@ -128,7 +136,7 @@ const SignIn: React.FC = () => {
             </KeyboardAvoidingView>
 
             <CreateAccountButton onPress={() => navigation.navigate('SignUp')} >
-                <Icon name='log-in' size={20} color='#ff9000' />
+                <Icon name='log-in' size={20} color={colors.orange} />
                 <CreateAccountText >Create Account</CreateAccountText>
             </CreateAccountButton>
         </>

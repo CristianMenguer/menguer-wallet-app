@@ -18,6 +18,7 @@ import logoImg from '../../assets/logo.png'
 import { Container, Title, BackToSignInButton, BackToSignInText } from './styles'
 import getValidationErrors from '../../utils/getValidationErros'
 import { showToast } from '../../utils/ShowToast'
+import { colors } from '../../constants/colors'
 
 interface SignUpFormData {
     fullname: string
@@ -57,7 +58,7 @@ const SignUp: React.FC = () => {
 
             await api.post('/users', data)
 
-            showToast('User created. Please, logon to continue!')
+            showToast('User created. Please, sign in to continue!')
 
             navigation.goBack()
 
@@ -80,6 +81,11 @@ const SignUp: React.FC = () => {
                 return
             } else {
                 console.log(err)
+            }
+
+            if (!!err.response?.data?.message) {
+                showToast(err.response.data.message)
+                return
             }
 
             showToast('Sign up error. Please, try again!')
@@ -120,6 +126,7 @@ const SignUp: React.FC = () => {
                                 icon={'user'}
                                 placeholder='Username'
                                 returnKeyType='next'
+                                autoCapitalize='none'
                                 ref={usernameRef}
                                 onSubmitEditing={() => emailRef.current?.focus()}
                             />
@@ -166,7 +173,7 @@ const SignUp: React.FC = () => {
             </KeyboardAvoidingView>
 
             <BackToSignInButton onPress={() => navigation.goBack()} >
-                <Icon name='arrow-left' size={20} color='#ff9000' />
+                <Icon name='arrow-left' size={20} color={colors.orange} />
                 <BackToSignInText >Back to Sign In</BackToSignInText>
             </BackToSignInButton>
         </>

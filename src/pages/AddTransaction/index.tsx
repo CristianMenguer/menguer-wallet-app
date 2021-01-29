@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, TextInput, DevSettings } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Feather'
 import * as Yup from 'yup'
@@ -20,6 +20,8 @@ import { AddWalletDB, GetTotalWalletsDB, GetWalletsDB, LoadOpenPositions } from 
 import { sleep } from '../../utils/Utils'
 import { GetCompaniesDB } from '../../models/Company'
 import useWallet from '../../hooks/wallet'
+import useLoadData from '../../hooks/loadData'
+import { colors } from '../../constants/colors'
 
 interface AddTransactionFormData {
     date: Date
@@ -33,6 +35,7 @@ interface AddTransactionFormData {
 const AddTransaction: React.FC = () => {
 
     const navigation = useNavigation()
+    const { loadQuotes } = useLoadData()
     const { loadMyPosition } = useWallet()
 
     const formRef = useRef<FormHandles>(null)
@@ -83,9 +86,11 @@ const AddTransaction: React.FC = () => {
                 const walletAdded = await AddWalletDB(wallet)
                 console.log(walletAdded)
                 showToast('Transaction created!')
+                await loadQuotes(wallet.dateTransaction, stock.id)
                 await loadMyPosition()
                 await sleep(250)
                 navigation.goBack()
+                //DevSettings.reload()
             } else {
                 showToast('Error. Stock code not found!')
             }
@@ -204,7 +209,7 @@ const AddTransaction: React.FC = () => {
             </Container>
 
             <BackToDashboardButton onPress={() => navigation.goBack()} >
-                <Icon name='arrow-left' size={20} color='#ff9000' />
+                <Icon name='arrow-left' size={20} color={colors.orange} />
                 <BackToDashboardText >Back to Dashboard</BackToDashboardText>
             </BackToDashboardButton>
         </>

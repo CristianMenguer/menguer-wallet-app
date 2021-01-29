@@ -86,7 +86,7 @@ export const BoxInfo = styled.Text<BoxInfoProps>`
     color: #312e38;
     ${text.default};
 
-    ${props => !!props && !!props.textColor && props.textColor !== "" && css`
+    ${props => !!props && !!props.textColor && props.textColor !== '' && css`
         color: ${props.textColor};
     `}
 

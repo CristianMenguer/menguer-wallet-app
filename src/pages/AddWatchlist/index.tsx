@@ -19,9 +19,10 @@ import { GetStockByCodeDB, } from '../../models/Stock'
 import { AddWalletDB } from '../../models/Wallet'
 import { sleep } from '../../utils/Utils'
 import useWallet from '../../hooks/wallet'
-import { AddWatchlistDB, RemoveWatchlistDB } from '../../models/Watchlist'
+import { AddWatchlistDB, GetWatchlistsDB, RemoveWatchlistDB } from '../../models/Watchlist'
 import { GetCompaniesDB, LoadCompanyByCodeDB } from '../../models/Company'
 import { createTablesDB, execSql } from '../../database'
+import { colors } from '../../constants/colors'
 
 interface WatchlistFormData {
     date: Date
@@ -36,28 +37,20 @@ const AddWatchlist: React.FC = () => {
 
     const navigation = useNavigation()
     const isFocused = useIsFocused()
-    const { loadMyPosition, myDataInfo } = useWallet()
+    const { loadMyPosition, reloadWatchlist, myDataInfo } = useWallet()
 
     const formRef = useRef<FormHandles>(null)
     const stockRef = useRef<TextInput>(null)
 
-    const [myList, setMyList] = useState<Watchlist[]>([])
-
-    useEffect(() => {
-        if (!isFocused || !myDataInfo || !myDataInfo.watchlist || !myDataInfo.watchlist.length || myDataInfo.watchlist.length < 1)
-            return
-        //
-        const list: Watchlist[] = []
-        //
-        myDataInfo.watchlist.forEach(watch => {
-            list.push(watch)
-        })
-        //
-        setMyList(list)
-    }, [isFocused, myDataInfo])
-
     const handleAddWatchlist = useCallback(async (data: WatchlistFormData) => {
 
+        const watchlists = await GetWatchlistsDB()
+        if (watchlists.filter(watch => watch.code === data.code).length > 0) {
+            showToast(`${data.code} is already in the watchlist!`)
+            formRef.current?.clearField('code')
+            return
+        }
+        //
         try {
             formRef.current?.setErrors({})
 
@@ -71,28 +64,16 @@ const AddWatchlist: React.FC = () => {
 
             const stock = await GetStockByCodeDB(data.code)
             if (!!stock && stock.id && stock.id > 0) {
-                if (myList.filter(watch => watch.code === stock.code).length > 0) {
-                    showToast(`${stock.code} is already in the watchlist!`)
-                    return
-                } else {
-                    const company = await LoadCompanyByCodeDB(stock.code)
-                    const watchlist = new Watchlist(stock.code, stock.id, company.name)
-                    const watchlistAdded = await AddWatchlistDB(watchlist)
-                    const list: Watchlist[] = []
-                    if (!!myList && myList.length > 0)
-                        myList.forEach(watch => {
-                            list.push(watch)
-                        })
-                    //
-                    list.push(watchlistAdded)
-                    //
-                    showToast('Company added to your Watchlist!')
-                    //
-                    list.sort((a, b) => a.name > b.name ? 1 : -1)
-                    setMyList(list)
-                    //
-                    loadMyPosition()
-                }
+                //
+                const company = await LoadCompanyByCodeDB(stock.code)
+                const watchlist = new Watchlist(stock.code, stock.id, company.name)
+                const watchlistAdded = await AddWatchlistDB(watchlist)
+                //
+                showToast(`${watchlistAdded.name} added to your Watchlist!`)
+                formRef.current?.clearField('code')
+                //
+                reloadWatchlist()
+
                 // navigation.goBack()
             } else {
                 showToast('Error. Stock code not found!')
@@ -133,14 +114,14 @@ const AddWatchlist: React.FC = () => {
                                 list.push(watch)
                             } else {
                                 RemoveWatchlistDB(watch)
-                                .then(response => {
-                                    if (response)
-                                        showToast(`${watch.name} removed from your watchlist!`)
-                                })
+                                    .then(response => {
+                                        if (response) {
+                                            showToast(`${watch.name} removed from your watchlist!`)
+                                            reloadWatchlist()
+                                        }
+                                    })
                             }
                         })
-                        //
-                        setMyList(list)
                     }
                 }
             ],
@@ -180,14 +161,14 @@ const AddWatchlist: React.FC = () => {
                     </Form>
 
                     <Box >
-                        {!!myList && myList.length > 0 && (
-                            myList.map((watch: Watchlist) => (
+                        {!!myDataInfo.watchlist && myDataInfo.watchlist.length > 0 && (
+                            myDataInfo.watchlist.map((watch: Watchlist) => (
                                 <BoxInfo key={watch.code} >
                                     <BoxText >{watch.name} - ({watch.code})</BoxText>
                                     <DeleteItemButton
                                         onPress={() => handleDeleteWatchlist(watch)}
                                     >
-                                        <Icon name='trash-2' size={20} color='#312e38' />
+                                        <Icon name='trash-2' size={20} color={colors.dark} />
                                     </DeleteItemButton>
                                 </BoxInfo>
                             ))
@@ -198,7 +179,7 @@ const AddWatchlist: React.FC = () => {
             </Container>
 
             <BackToDashboardButton onPress={() => navigation.goBack()} >
-                <Icon name='arrow-left' size={20} color='#ff9000' />
+                <Icon name='arrow-left' size={20} color={colors.orange} />
                 <BackToDashboardText >Back to Dashboard</BackToDashboardText>
             </BackToDashboardButton>
         </>

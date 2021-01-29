@@ -3,7 +3,7 @@ import Wallet from '../entities/Wallet'
 
 const tableName = 'wallet'
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns all the Wallet Objects from the Database
 export const GetWalletsDB = async (): Promise<Wallet[]> => {
 
     const response = await selectDB(tableName) as Wallet[]
@@ -14,7 +14,7 @@ export const GetWalletsDB = async (): Promise<Wallet[]> => {
     return response
 }
 
-// This function receives a currency object and saves it to the database and returns the object saved
+// This function receives a Wallet object and saves it to the database and returns the object saved
 // with the new ID.
 export const AddWalletDB = async (props: Wallet): Promise<Wallet> => {
     if (!props || !props.stock_id)
@@ -36,7 +36,7 @@ export const AddWalletDB = async (props: Wallet): Promise<Wallet> => {
 
 }
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns the quantity os Wallet rows in the Database
 export const GetTotalWalletsDB = async (): Promise<number> => {
 
     const response = await countDB(tableName) as number
@@ -44,6 +44,7 @@ export const GetTotalWalletsDB = async (): Promise<number> => {
     return response
 }
 
+// This function returns all the open positions that the user have registered
 export const LoadOpenPositions = async (quantity: number = 10): Promise<OpenPosition[]> => {
 
     const response = await CustomSelectDB('select ' +

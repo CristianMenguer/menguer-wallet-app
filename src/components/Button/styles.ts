@@ -1,6 +1,8 @@
 import styled from 'styled-components/native'
 import { RectButton } from 'react-native-gesture-handler'
 
+// This is the stylisation of the component Button
+
 export const Container = styled(RectButton)`
     width: 100%;
     height: 60px;

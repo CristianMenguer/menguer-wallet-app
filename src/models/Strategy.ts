@@ -3,7 +3,7 @@ import Strategy from '../entities/Strategy'
 
 const tableName = 'strategy'
 
-// This function receives the currency base, retrieves the rate from the database and returns it.
+// This function returns all the Strategy Objects from the Database
 export const GetStrategiesDB = async (): Promise<Strategy[]> => {
 
     const response = await selectDB(tableName) as Strategy[]
@@ -15,7 +15,7 @@ export const GetStrategiesDB = async (): Promise<Strategy[]> => {
 
 }
 
-// This function receives a currency object and saves it to the database and returns the object saved
+// This function receives a Strategy object and saves it to the database and returns the object saved
 // with the new ID.
 export const AddStrategyDB = async (props: Strategy): Promise<Strategy> => {
     if (!props)

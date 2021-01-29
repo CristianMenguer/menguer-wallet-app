@@ -1,3 +1,4 @@
+// The font family used in the application is defined here
 export default () => ({
     default: {
         fontFamily: 'RobotoSlab-Regular',

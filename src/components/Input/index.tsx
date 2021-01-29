@@ -2,8 +2,13 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState, us
 import { TextInputProps } from 'react-native'
 import { useField } from '@unform/core'
 
+import { colors } from '../../constants/colors'
+
 import { Container, TextInput, Icon } from './styles'
 
+// This is a personalised Input component
+
+// This interface gives a type to the parameters received by the component
 interface InputProps extends TextInputProps {
     name: string
     icon: string
@@ -58,18 +63,19 @@ const Input: React.RefForwardingComponent<InputRef, InputProps> = ({ name, icon,
     }, [fieldName, registerField])
 
     return (
+
         <Container isFocused={isFocused} isErrored={!!error} >
             <Icon
                 name={icon}
                 size={20}
-                color={isFocused ? '#ff9000' : (
-                    !!error ? '#c53030' : (
-                        isFilled ? '#ff9000' : '#8B8B89'))}
+                color={isFocused ? colors.orange : (
+                    !!error ? colors.red : (
+                        isFilled ? colors.orange : colors.gray))}
             />
 
             <TextInput
                 ref={inputElementRef}
-                placeholderTextColor='#8B8B89'
+                placeholderTextColor={colors.gray}
                 defaultValue={defaultValue}
                 onChangeText={value => inputValueRef.current.value = value}
                 onBlur={handleInputBlur}
