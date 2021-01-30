@@ -1,3 +1,4 @@
+//This is the Sign In page.
 import React, { useCallback, useRef } from 'react'
 import { Image, KeyboardAvoidingView, Platform, View, ScrollView, TextInput, Alert } from 'react-native'
 import Icon from 'react-native-vector-icons/Feather'
@@ -7,7 +8,7 @@ import { Form } from '@unform/mobile'
 import { FormHandles } from '@unform/core'
 import * as Yup from 'yup'
 
-import getValidationErrors from '../../utils/getValidationErros'
+import getValidationErrors, { getFirstErrorMessage } from '../../utils/getValidationErros'
 import useAuth from '../../hooks/auth'
 
 import Input from '../../components/Input'
@@ -15,12 +16,12 @@ import Button from '../../components/Button'
 
 import logoImg from '../../assets/logo.png'
 
-import { Container, Title, ForgotPasswordButton, ForgotPasswordText, CreateAccountButton, CreateAccountText } from './styles'
+import { Container, Title, CreateAccountButton, CreateAccountText } from './styles'
 import { showToast } from '../../utils/ShowToast'
-import { AxiosError } from 'axios'
-import { dropTablesDB, createTablesDB } from '../../database'
 import { colors } from '../../constants/colors'
+import { createTablesDB, dropTablesDB } from '../../database'
 
+// interface used to receive the data from the form when submitted
 interface SignInFormData {
     email: string
     password: string
@@ -35,11 +36,13 @@ const SignIn: React.FC = () => {
 
     const navigation = useNavigation()
 
+    // function called when the form is submitted
     const handleSignIn = useCallback(async (data: SignInFormData) => {
         try {
 
             formRef.current?.setErrors({})
 
+            // schema that validates the data
             const schema = Yup.object().shape({
                 email: Yup.string().required('Email is required').email('Email not valid'),
                 password: Yup.string().required('Password is required')
@@ -52,25 +55,27 @@ const SignIn: React.FC = () => {
 
             const { email, password } = data
 
+            // sign in function from context
             await signIn({
                 email,
                 password
             })
 
+            // if signed in, create all tables ang navigate to dashboard
             await dropTablesDB()
             await createTablesDB()
 
-            // history.push('/dashboard')
+            navigation.navigate('/dashboard')
 
         } catch (err) {
+            // Errors are handled here and shown to the user
             if (err instanceof Yup.ValidationError) {
                 const errors = getValidationErrors(err)
                 formRef.current?.setErrors(errors)
                 //
-                if (errors.email)
-                    showToast(errors.email)
-                else if (errors.password)
-                    showToast(errors.password)
+                const errorMessage = getFirstErrorMessage(errors)
+                if (!!errorMessage)
+                    showToast(errorMessage)
                 //
                 return
             }
@@ -86,6 +91,11 @@ const SignIn: React.FC = () => {
         }
     }, [signIn])
 
+
+    /**
+     * The page itself.
+     * Logo + Form + 'Create Account' Button
+     */
     return (
         <>
             <KeyboardAvoidingView

@@ -1,6 +1,8 @@
 import styled from 'styled-components/native'
 import { text } from '../../theme'
 
+// This is the style file to the sign in page
+
 export const Container = styled.View`
     flex: 1;
     align-items: center;
@@ -44,7 +46,7 @@ export const CreateAccountButton = styled.TouchableOpacity`
 
 export const CreateAccountText = styled.Text`
     font-size: 14px;
-    font-family: 'RobotoSlab-Regular';
     color: #ff9000;
     margin-left: 16px;
+    ${text.default}
 `

@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
+//This is the page where the user add a stock to the watchlist.
+import React, { useCallback, useRef } from 'react'
+import { ScrollView, TextInput, Alert } from 'react-native'
 import { useIsFocused, useNavigation } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Feather'
 import * as Yup from 'yup'
@@ -13,17 +14,15 @@ import Input from '../../components/Input'
 import { Container, TitlePage, BackToDashboardButton, BackToDashboardText, Box, BoxInfo, BoxText, DeleteItemButton } from './styles'
 import Button from '../../components/Button'
 import { showToast } from '../../utils/ShowToast'
-import getValidationErrors from '../../utils/getValidationErros'
+import getValidationErrors, { getFirstErrorMessage } from '../../utils/getValidationErros'
 import Watchlist from '../../entities/Watchlist'
 import { GetStockByCodeDB, } from '../../models/Stock'
-import { AddWalletDB } from '../../models/Wallet'
-import { sleep } from '../../utils/Utils'
 import useWallet from '../../hooks/wallet'
 import { AddWatchlistDB, GetWatchlistsDB, RemoveWatchlistDB } from '../../models/Watchlist'
-import { GetCompaniesDB, LoadCompanyByCodeDB } from '../../models/Company'
-import { createTablesDB, execSql } from '../../database'
+import { LoadCompanyByCodeDB } from '../../models/Company'
 import { colors } from '../../constants/colors'
 
+// interface used to receive the data from the form when submitted
 interface WatchlistFormData {
     date: Date
     code: string
@@ -37,13 +36,16 @@ const AddWatchlist: React.FC = () => {
 
     const navigation = useNavigation()
     const isFocused = useIsFocused()
-    const { loadMyPosition, reloadWatchlist, myDataInfo } = useWallet()
+    const { reloadWatchlist, myDataInfo } = useWallet()
 
     const formRef = useRef<FormHandles>(null)
     const stockRef = useRef<TextInput>(null)
 
+    // function called when the form is submitted
     const handleAddWatchlist = useCallback(async (data: WatchlistFormData) => {
 
+
+        // validate if the stock code is already in the watchlist
         const watchlists = await GetWatchlistsDB()
         if (watchlists.filter(watch => watch.code === data.code).length > 0) {
             showToast(`${data.code} is already in the watchlist!`)
@@ -54,6 +56,7 @@ const AddWatchlist: React.FC = () => {
         try {
             formRef.current?.setErrors({})
 
+            // schema that validates the data
             const schema = Yup.object().shape({
                 code: Yup.string().required('Code is required!')
             })
@@ -62,6 +65,9 @@ const AddWatchlist: React.FC = () => {
                 abortEarly: false
             })
 
+            // search for the stock by its code
+            // if found, add to watchlist
+            // if not, show the message to the user
             const stock = await GetStockByCodeDB(data.code)
             if (!!stock && stock.id && stock.id > 0) {
                 //
@@ -74,18 +80,20 @@ const AddWatchlist: React.FC = () => {
                 //
                 reloadWatchlist()
 
-                // navigation.goBack()
             } else {
                 showToast('Error. Stock code not found!')
+                formRef.current?.setFieldError('code', 'Stock Code not found!')
             }
 
         } catch (err) {
+            // Errors are handled here and shown to the user
             if (err instanceof Yup.ValidationError) {
                 const errors = getValidationErrors(err)
                 formRef.current?.setErrors(errors)
                 //
-                if (errors.code)
-                    showToast(errors.code)
+                const errorMessage = getFirstErrorMessage(errors)
+                if (!!errorMessage)
+                    showToast(errorMessage)
                 //
                 return
             } else {
@@ -96,7 +104,9 @@ const AddWatchlist: React.FC = () => {
         }
     }, [])
 
+    // function called to delete a stock from the watchlist
     const handleDeleteWatchlist = useCallback(async (data: Watchlist) => {
+        // ask the user to confirm the operation
         Alert.alert(
             'Delete from Watchlist',
             `Are you sure you want to delete ${data.name} from your watchlist?`,
@@ -108,11 +118,9 @@ const AddWatchlist: React.FC = () => {
                 {
                     text: 'Yes',
                     onPress: async () => {
-                        const list: Watchlist[] = []
+                        // if user confirms, delete from DB and update the context/hook
                         myDataInfo.watchlist.forEach((watch: Watchlist) => {
-                            if (watch.code !== data.code) {
-                                list.push(watch)
-                            } else {
+                            if (watch.code === data.code) {
                                 RemoveWatchlistDB(watch)
                                     .then(response => {
                                         if (response) {
@@ -129,6 +137,10 @@ const AddWatchlist: React.FC = () => {
         )
     }, [])
 
+    /**
+     * The page itself.
+     * Header + Form + Stock in the Watchlist + 'Back to Dashboard' Button
+     */
     return (
         <>
             <Header />

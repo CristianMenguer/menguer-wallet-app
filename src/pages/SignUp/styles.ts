@@ -1,5 +1,8 @@
 import { Platform } from 'react-native'
 import styled from 'styled-components/native'
+import { text } from '../../theme'
+
+// This is the style file to the sign up page
 
 export const Container = styled.View`
     flex: 1;
@@ -10,9 +13,9 @@ export const Container = styled.View`
 
 export const Title = styled.Text`
     font-size: 20px;
-    font-family: 'RobotoSlab-Regular';
     color: #312e38;
     margin: 64px 0 24px;
+    ${text.default}
 `
 
 export const BackToSignInButton = styled.TouchableOpacity`
@@ -33,7 +36,7 @@ export const BackToSignInButton = styled.TouchableOpacity`
 
 export const BackToSignInText = styled.Text`
     font-size: 14px;
-    font-family: 'RobotoSlab-Regular';
     color: #ff9000;
     margin-left: 16px;
+    ${text.default}
 `

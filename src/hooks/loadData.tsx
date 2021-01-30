@@ -51,6 +51,7 @@ export const LoadDataProvider: React.FC = ({ children }) => {
         const refreshQuotesDB = true
         const refreshRecommendationsDB = true
         //
+        // it drops all the tables from the Database
         if (dropDB)
             await dropTablesDB()
         //

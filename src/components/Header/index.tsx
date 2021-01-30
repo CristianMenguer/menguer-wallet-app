@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Alert } from 'react-native'
+import { Alert, DevSettings } from 'react-native'
 import Icon from 'react-native-vector-icons/Feather'
 import { colors } from '../../constants/colors'
 
@@ -9,6 +9,7 @@ import logoImg from '../../assets/logo.png'
 
 import useAuth from '../../hooks/auth'
 import { dropTablesDB } from '../../database'
+import { showToast } from '../../utils/ShowToast'
 
 // This is a personalised Header component
 
@@ -30,8 +31,10 @@ const Header: React.FC = () => {
                 {
                     text: 'Yes',
                     onPress: async () => {
-                        await signOut()
                         await dropTablesDB()
+                        await signOut()
+                        showToast('You are signing out...')
+                        DevSettings.reload('Sign Out')
                     }
                 }
             ],

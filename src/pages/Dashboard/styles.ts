@@ -1,10 +1,14 @@
 import styled, { css } from 'styled-components/native'
 import { text } from '../../theme'
 
+// This is the style file to the dashboard page
+
+// interface to handle the props in the tabButton
 interface TabButtonItemProps {
     isSelected: boolean
 }
 
+// interface to handle the props in the boxInfo
 interface BoxInfoProps {
     textColor?: string
     textSize?: number
@@ -86,6 +90,7 @@ export const BoxInfo = styled.Text<BoxInfoProps>`
     color: #312e38;
     ${text.default};
 
+    /* read the props sent through the component */
     ${props => !!props && !!props.textColor && props.textColor !== '' && css`
         color: ${props.textColor};
     `}
@@ -114,6 +119,7 @@ export const TabButtonItem = styled.TouchableOpacity<TabButtonItemProps>`
     border-width: 1px;
     border-color: #FF8E00;
 
+    /* read the props sent through the component */
     ${props => props.isSelected && css`
         background-color: #ff9000;
         border-width: 2px;
@@ -127,6 +133,7 @@ export const TabButtonItemText = styled.Text<TabButtonItemProps>`
     color: #312e38;
     ${text.default}
 
+    /* read the props sent through the component */
     ${props => props.isSelected && css`
         font-size: 12px;
     `}

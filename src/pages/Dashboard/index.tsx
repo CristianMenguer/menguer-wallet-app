@@ -1,5 +1,6 @@
+//This is the Dashboard page where the user can find everything about his progress and recommendations.
 import React, { useEffect, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native'
+import { View, ScrollView, Dimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/Feather'
 import { useNavigation, useIsFocused } from '@react-navigation/native'
 import Modal from 'react-native-modal'
@@ -18,11 +19,9 @@ import Loader from '../../components/Loader'
 import Watchlist from '../../entities/Watchlist'
 import { GetRecommendationsDB } from '../../models/Recommendation'
 import Recommendation from '../../entities/Recommendation'
-import { createTablesDB } from '../../database'
-import { AddStrategyDB, GetStrategiesDB } from '../../models/Strategy'
-import Strategy from '../../entities/Strategy'
 import { colors } from '../../constants/colors'
 
+// interfaces used to type data to the pieChart
 interface PieChartData {
     code: string
     name: string
@@ -42,6 +41,8 @@ const Dashboard: React.FC = () => {
 
     const { loadMyPosition, myDataInfo } = useWallet()
 
+    // variables are initialised here
+    // in this page the data is read from the context and stored in these variables to be shown
     const [isModalWalletVisible, setModalWalletVisible] = useState(false)
     const [isModalRankingPVisible, setModalRankingPVisible] = useState(false)
     const [isModalRankingNVisible, setModalRankingNVisible] = useState(false)
@@ -54,7 +55,10 @@ const Dashboard: React.FC = () => {
     const [rankingNegative, setRankingNegative] = useState([] as OpenPosition[])
     const [pieChartData, setPieChartData] = useState([] as PieChartData[])
     const [pieChartSectionData, setPieChartSectionData] = useState([] as PieChartSectionData[])
+    const [profitLossAmout, setProfitLossAmout] = useState(0)
+    const [profitLossPerc, setProfitLossPerc] = useState(0)
 
+    // colors that are used in the pi chart
     const colorsGraphic = [
         '#ff9000',
         '#0540F2',
@@ -63,11 +67,12 @@ const Dashboard: React.FC = () => {
         '#F5BB00',
         '#F24130',
         '#F2E205',
-        '#7AFF0D',
         '#7D4EBF',
+        '#7AFF0D',
         '#48454D'
     ]
 
+    // config of the bar charts
     const chartConfig = {
         backgroundColor: colors.light,
         backgroundGradientFrom: '#fb8c00',
@@ -84,13 +89,15 @@ const Dashboard: React.FC = () => {
         }
     }
 
+    // it will reload the current position when entering the screen
     useEffect(() => {
         if (!isFocused)
             return
         //
         loadMyPosition()
-    }, [isFocused, myDataInfo])
+    }, [isFocused])
 
+    // here the recommendations are loaded and matched with the watchlist
     useEffect(() => {
 
         async function getRecommendations() {
@@ -128,12 +135,10 @@ const Dashboard: React.FC = () => {
         //
     }, [isFocused, myDataInfo])
 
+    // here the variables used in the charts are refreshed
     useEffect(() => {
 
-        if (!isFocused)
-            return
-        //
-        if (!myDataInfo || !myDataInfo.openPosition)
+        if (!isFocused || !myDataInfo || !myDataInfo.openPosition)
             return
         //
         const rankingP = [] as OpenPosition[]
@@ -177,6 +182,7 @@ const Dashboard: React.FC = () => {
         //
     }, [isFocused, myDataInfo])
 
+    // profit/loss updated according to filter
     useEffect(() => {
         if (!isFocused || !myDataInfo || !myDataInfo.openPosition || myDataInfo.openPosition.length < 1)
             return
@@ -216,11 +222,12 @@ const Dashboard: React.FC = () => {
             //
         }
         //
-        myDataTemp.profitLossAmout = myDataTemp.totalBalance - totalInvested
-        myDataTemp.profitLossPerc = ((myDataTemp.totalBalance / totalInvested) - 1) * 100
+        setProfitLossAmout(myDataTemp.totalBalance - totalInvested)
+        setProfitLossPerc(((myDataTemp.totalBalance / totalInvested) - 1) * 100)
         //
     }, [isFocused, profitLossIndex])
 
+    // ranking positive updated according to filter
     useEffect(() => {
         if (!isFocused || !myDataInfo || !myDataInfo.openPosition || !myDataInfo.openPosition.length || myDataInfo.openPosition.length < 1)
             return
@@ -253,6 +260,7 @@ const Dashboard: React.FC = () => {
 
     }, [isFocused, rankingPositiveIndex])
 
+    // ranking negative updated according to filter
     useEffect(() => {
         if (!isFocused || !myDataInfo || !myDataInfo.openPosition || !myDataInfo.openPosition.length || myDataInfo.openPosition.length < 1)
             return
@@ -285,9 +293,16 @@ const Dashboard: React.FC = () => {
 
     }, [isFocused, rankingNegativeIndex])
 
+    // if the data is not loaded, will show the loading page while waiting
     if (!myDataInfo)
         return <Loader message='Loading Dashboard' />
 
+    /**
+     * The page itself.
+     * Header + boxes
+     *
+     * Modals with charts are also here
+    */
     return (
         <>
             <Header />
@@ -346,8 +361,8 @@ const Dashboard: React.FC = () => {
                                 </TabButtonItem>
                             </TabButtons>
                         </BoxTile>
-                        <BoxInfo textSize={20} >{!!myDataInfo.profitLossPerc ? myDataInfo.profitLossPerc.toFixed(2) : 0}%</BoxInfo>
-                        <BoxInfo textSize={20} >R$ {!!myDataInfo.profitLossAmout ? myDataInfo.profitLossAmout.toFixed(2) : 0}</BoxInfo>
+                        <BoxInfo textSize={20} >{!!profitLossPerc ? profitLossPerc.toFixed(2) : 0}%</BoxInfo>
+                        <BoxInfo textSize={20} >R$ {!!profitLossAmout ? profitLossAmout.toFixed(2) : 0}</BoxInfo>
                     </Box>
 
                     <BoxTouch onPress={() => {

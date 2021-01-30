@@ -1,5 +1,7 @@
-import styled, { css } from 'styled-components/native'
+import styled from 'styled-components/native'
 import { text } from '../../theme'
+
+// This is the style file to the Add to Watchlist page
 
 export const Container = styled.View`
     flex: 1;
@@ -29,9 +31,9 @@ export const BackToDashboardButton = styled.TouchableOpacity`
 
 export const BackToDashboardText = styled.Text`
     font-size: 14px;
-    font-family: 'RobotoSlab-Regular';
     color: #ff9000;
     margin-left: 16px;
+    ${text.default}
 `
 
 export const Box = styled.View`

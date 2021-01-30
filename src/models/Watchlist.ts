@@ -1,4 +1,4 @@
-import { selectDB, insertDB, countDB, execSql } from '../database'
+import { selectDB, insertDB, execSql } from '../database'
 import Watchlist from '../entities/Watchlist'
 
 const tableName = 'watchlist'

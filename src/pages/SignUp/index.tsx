@@ -1,3 +1,4 @@
+//This is the Sign Up page.
 import React, { useCallback, useRef } from 'react'
 import { Image, KeyboardAvoidingView, Platform, View, ScrollView, TextInput } from 'react-native'
 import Icon from 'react-native-vector-icons/Feather'
@@ -16,10 +17,12 @@ import Button from '../../components/Button'
 import logoImg from '../../assets/logo.png'
 
 import { Container, Title, BackToSignInButton, BackToSignInText } from './styles'
-import getValidationErrors from '../../utils/getValidationErros'
+import getValidationErrors, { getFirstErrorMessage } from '../../utils/getValidationErros'
 import { showToast } from '../../utils/ShowToast'
 import { colors } from '../../constants/colors'
+import { sleep } from '../../utils/Utils'
 
+// interface used to receive the data from the form when submitted
 interface SignUpFormData {
     fullname: string
     username: string
@@ -43,6 +46,7 @@ const SignUp: React.FC = () => {
 
             formRef.current?.setErrors({})
 
+            // schema that validates the data
             const schema = Yup.object().shape({
                 fullname: Yup.string().required('Name is required'),
                 username: Yup.string().required('Username is required'),
@@ -58,25 +62,21 @@ const SignUp: React.FC = () => {
 
             await api.post('/users', data)
 
+            // if user created, shows the message and redirect to sign in page
             showToast('User created. Please, sign in to continue!')
 
+            sleep(100)
             navigation.goBack()
 
         } catch (err) {
+            // Errors are handled here and shown to the user
             if (err instanceof Yup.ValidationError) {
                 const errors = getValidationErrors(err)
                 formRef.current?.setErrors(errors)
                 //
-                if (errors.fullname)
-                    showToast(errors.fullname)
-                else if (errors.username)
-                    showToast(errors.username)
-                else if (errors.email)
-                    showToast(errors.email)
-                else if (errors.password)
-                    showToast(errors.password)
-                else if (errors.confirm_password)
-                    showToast(errors.confirm_password)
+                const errorMessage = getFirstErrorMessage(errors)
+                if (!!errorMessage)
+                    showToast(errorMessage)
                 //
                 return
             } else {
@@ -93,6 +93,10 @@ const SignUp: React.FC = () => {
         }
     }, [navigation])
 
+    /**
+     * The page itself.
+     * Logo + Form + 'Back to Sign In' Button
+     */
     return (
         <>
             <KeyboardAvoidingView

@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, TextInput, DevSettings } from 'react-native'
+//This is the page where the user add a transaction.
+
+import React, { useCallback, useRef } from 'react'
+import { ScrollView, TextInput } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Feather'
 import * as Yup from 'yup'
@@ -13,16 +15,16 @@ import Input from '../../components/Input'
 import { Container, TitlePage, BackToDashboardButton, BackToDashboardText } from './styles'
 import Button from '../../components/Button'
 import { showToast } from '../../utils/ShowToast'
-import getValidationErrors from '../../utils/getValidationErros'
+import getValidationErrors, { getFirstErrorMessage } from '../../utils/getValidationErros'
 import Wallet from '../../entities/Wallet'
-import { GetStockByCodeDB, GetStocksDB } from '../../models/Stock'
-import { AddWalletDB, GetTotalWalletsDB, GetWalletsDB, LoadOpenPositions } from '../../models/Wallet'
+import { GetStockByCodeDB } from '../../models/Stock'
+import { AddWalletDB, GetWalletsDB, LoadOpenPositions } from '../../models/Wallet'
 import { sleep } from '../../utils/Utils'
-import { GetCompaniesDB } from '../../models/Company'
 import useWallet from '../../hooks/wallet'
 import useLoadData from '../../hooks/loadData'
 import { colors } from '../../constants/colors'
 
+// interface used to receive the data from the form when submitted
 interface AddTransactionFormData {
     date: Date
     code: string
@@ -46,27 +48,13 @@ const AddTransaction: React.FC = () => {
     const feesRef = useRef<TextInput>(null)
     const totalRef = useRef<TextInput>(null)
 
-    useEffect(() => {
-
-        // GetCompaniesDB()
-        //     .then(companies => {
-        //         console.log('\n\nCompanies:')
-        //         console.log(companies)
-        //     })
-
-        GetWalletsDB()
-            .then(wallets => {
-                console.log('\n\nWallets:')
-                console.log(wallets)
-            })
-
-    }, [])
-
+    // function called when the form is submitted
     const handleAddTransaction = useCallback(async (data: AddTransactionFormData) => {
 
         try {
             formRef.current?.setErrors({})
 
+            // schema that validates the data
             const schema = Yup.object().shape({
                 date: Yup.date().min('2000-01-01', 'Date is required!'),
                 code: Yup.string().required('Code is required!'),
@@ -79,6 +67,10 @@ const AddTransaction: React.FC = () => {
             await schema.validate(data, {
                 abortEarly: false
             })
+
+            // it validates if the stock code exists
+            // if yes, add the transaction and go back to the dashboard
+            // if not, show the message to the user
 
             const stock = await GetStockByCodeDB(data.code)
             if (!!stock && stock.id && stock.id > 0) {
@@ -93,25 +85,18 @@ const AddTransaction: React.FC = () => {
                 //DevSettings.reload()
             } else {
                 showToast('Error. Stock code not found!')
+                formRef.current?.setFieldError('code', 'Stock Code not found!')
             }
 
         } catch (err) {
+            // Errors are handled here and shown to the user
             if (err instanceof Yup.ValidationError) {
                 const errors = getValidationErrors(err)
                 formRef.current?.setErrors(errors)
                 //
-                if (errors.date)
-                    showToast(errors.date)
-                else if (errors.code)
-                    showToast(errors.code)
-                else if (errors.price)
-                    showToast(errors.price)
-                else if (errors.quantity)
-                    showToast(errors.quantity)
-                else if (errors.fees)
-                    showToast(errors.fees)
-                else if (errors.total)
-                    showToast(errors.total)
+                const errorMessage = getFirstErrorMessage(errors)
+                if (!!errorMessage)
+                    showToast(errorMessage)
                 //
                 return
             } else {
@@ -122,6 +107,10 @@ const AddTransaction: React.FC = () => {
         }
     }, [])
 
+    /**
+     * The page itself.
+     * Header + Form + 'Back to Dashboard' Button
+     */
     return (
         <>
             <Header />

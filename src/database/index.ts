@@ -92,6 +92,12 @@ export const dropTablesDB = async (): Promise<boolean> => {
     queries.push('drop table if exists wallet')
 
     queries.push('drop table if exists watchlist')
+
+    queries.push('drop table if exists quote')
+
+    queries.push('drop table if exists strategy')
+
+    queries.push('drop table if exists recommendation')
     //
     while (queries.length > 0) {
         const sql = queries.shift()
