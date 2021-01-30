@@ -84,7 +84,14 @@ const SignUp: React.FC = () => {
             }
 
             if (!!err.response?.data?.message) {
+                //console.log(err.response.data)
                 showToast(err.response.data.message)
+                if ((err.response.data.message as string).includes('username'))
+                    formRef.current?.setFieldError('username', err.response.data.message)
+                //
+                if ((err.response.data.message as string).includes('Email'))
+                    formRef.current?.setFieldError('email', err.response.data.message)
+                //
                 return
             }
 

@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useState, useContext, useEffect } from 'react'
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
+import { createTablesDB, dropTablesDB } from '../database'
 
 // Interfaces used in the authentication process
 interface AuthState {
@@ -73,6 +74,11 @@ export const AuthProvider: React.FC = ({ children }) => {
         ])
 
         api.defaults.headers.authorization = `Bearer ${token}`
+
+        //
+        // if signed in, create all tables ang navigate to dashboard
+        await dropTablesDB()
+        await createTablesDB()
 
         setData({ token, user })
 

@@ -10,19 +10,20 @@ import logoImg from '../../assets/logo.png'
 import useAuth from '../../hooks/auth'
 import { dropTablesDB } from '../../database'
 import { showToast } from '../../utils/ShowToast'
+import User from '../../entities/User'
 
 // This is a personalised Header component
 
 const Header: React.FC = () => {
 
-    const { signOut } = useAuth()
+    const { signOut, user } = useAuth()
 
     // function called when the user press "Sign Out"
     const handleSignOut = useCallback(async () => {
         //
         Alert.alert(
             'Sign Out',
-            `Are you sure you want to Sign Out?`,
+            `${(user as User).fullname}, are you sure you want to Sign Out?`,
             [
                 {
                     text: 'No',

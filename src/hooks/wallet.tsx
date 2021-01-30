@@ -32,7 +32,7 @@ export const WalletProvider: React.FC = ({ children }) => {
         watchlist.sort((a, b) => a.name > b.name ? 1 : -1)
         watchlist.forEach(watch => myData.watchlist.push(watch))
         //
-        console.log(myData)
+        //console.log(myData)
         setMyDataInfo(myData)
         //
         return watchlist

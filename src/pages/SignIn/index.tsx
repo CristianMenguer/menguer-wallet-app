@@ -61,11 +61,7 @@ const SignIn: React.FC = () => {
                 password
             })
 
-            // if signed in, create all tables ang navigate to dashboard
-            await dropTablesDB()
-            await createTablesDB()
-
-            navigation.navigate('/dashboard')
+            //
 
         } catch (err) {
             // Errors are handled here and shown to the user

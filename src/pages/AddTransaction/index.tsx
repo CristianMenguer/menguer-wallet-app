@@ -67,6 +67,15 @@ const AddTransaction: React.FC = () => {
             await schema.validate(data, {
                 abortEarly: false
             })
+            /**
+             *
+            itsa4
+            2017-07-21
+            8.36
+            500
+            5
+            4185
+             */
 
             // it validates if the stock code exists
             // if yes, add the transaction and go back to the dashboard
@@ -76,10 +85,10 @@ const AddTransaction: React.FC = () => {
             if (!!stock && stock.id && stock.id > 0) {
                 const wallet = new Wallet(stock.id, new Date(data.date), data.quantity, data.price, data.fees, data.total)
                 const walletAdded = await AddWalletDB(wallet)
-                console.log(walletAdded)
+                //console.log(walletAdded)
                 showToast('Transaction created!')
-                await loadQuotes(wallet.dateTransaction, stock.id)
-                await loadMyPosition()
+                loadQuotes(wallet.dateTransaction, stock.id)
+                    .then(() => loadMyPosition())
                 await sleep(250)
                 navigation.goBack()
                 //DevSettings.reload()

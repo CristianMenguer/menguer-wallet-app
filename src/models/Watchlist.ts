@@ -37,13 +37,13 @@ export const AddWatchlistDB = async (props: Watchlist): Promise<Watchlist> => {
 
 //This function receives a Watchlist object and deletes it from the Database
 export const RemoveWatchlistDB = async (props: Watchlist): Promise<boolean> => {
-    console.log(props)
+    //console.log(props)
     if (!props || !props.id)
         return false
     //
     try {
         const response = await execSql(` delete from ${tableName} where id = ${props.id} `)
-        console.log(response)
+        //console.log(response)
         //
         return true
         //
